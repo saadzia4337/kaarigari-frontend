@@ -1,21 +1,22 @@
 /**
  * API server address for the app.
  *
- * - null = use 10.0.2.2 (Android emulator only).
+ * - Production: kaarigari-backend-production.up.railway.app
+ * - Development: null = use 10.0.2.2 (Android emulator only).
  * - Your PC's IP = use when on physical device (or if emulator can't reach 10.0.2.2).
  *   Phone and PC must be on the same WiFi. Run "ipconfig" to get IPv4.
  */
-export const API_HOST_OVERRIDE = '192.168.100.117';
+export const API_HOST_OVERRIDE = 'kaarigari-backend-production.up.railway.app';
 
 /**
  * API configuration for different environments
  */
 export const API_CONFIG = {
   BASE_URL: API_HOST_OVERRIDE 
-    ? `http://${API_HOST_OVERRIDE}:5000` 
+    ? `https://${API_HOST_OVERRIDE}` 
     : `http://localhost:5000`,
   IMAGE_BASE_URL: API_HOST_OVERRIDE 
-    ? `http://${API_HOST_OVERRIDE}:5000` 
+    ? `https://${API_HOST_OVERRIDE}` 
     : 'http://10.0.2.2:5000',
   PORT: 5000
 };

@@ -44,8 +44,8 @@ function AppContent() {
         setStripePublishableKey(config.publishableKey);
       } catch (error) {
         console.error('Failed to load Stripe config:', error);
-        // Fallback to test key for development
-        setStripePublishableKey('pk_test_51Q54FDC0jKdaSlvDMcaevIYbnOaJmp46S0aUDk3XhmBf3jGuDfP4eR6m2SkwT1DB9nNR248DcPRVUImmwjBOipjF006rceJc2a');
+        // Fallback to environment variable
+        setStripePublishableKey(process.env.STRIPE_PUBLISHABLE_KEY);
       }
     };
 

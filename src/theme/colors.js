@@ -3,7 +3,8 @@
  * @format
  */
 
-const PRIMARY = '#8d5b38';
+// const PRIMARY = '#8d5b38';
+const PRIMARY = '#0D1321';
 
 export const lightColors = {
   primary: PRIMARY,

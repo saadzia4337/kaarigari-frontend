@@ -16,6 +16,8 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import { createPaymentIntent, confirmPayment } from '../services/stripeService';
 import { showToast } from '../store/slices/toastSlice';
 import { useDispatch } from 'react-redux';
+import { createOrderAsync } from '../store/slices/ordersSlice';
+import { formatOrderData } from '../services/orderService';
 
 export default function PaymentScreen({ navigation, route }) {
   const theme = useTheme();
@@ -26,17 +28,27 @@ export default function PaymentScreen({ navigation, route }) {
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [paymentIntent, setPaymentIntent] = useState(null);
+  const [initError, setInitError] = useState(null);
   
   // Get order details from route params
   const { orderDetails } = route.params || {};
-  const { orderId, amount, currency = 'usd', orderItems } = orderDetails || {};
+  const { items, totalAmount, currency = 'usd', shippingAddress, sellerName } = orderDetails || {};
+  const amount = totalAmount;
+  const orderItems = items;
 
   useEffect(() => {
     initializePaymentSheet();
   }, []);
 
+  // Retry payment initialization if it fails
+  const retryPayment = () => {
+    setInitError(null);
+    setLoading(true);
+    initializePaymentSheet();
+  };
+
   const initializePaymentSheet = async () => {
-    if (!token || !orderId || !amount) {
+    if (!token || !amount) {
       Alert.alert('Error', 'Missing order information');
       navigation.goBack();
       return;
@@ -45,15 +57,24 @@ export default function PaymentScreen({ navigation, route }) {
     try {
       setLoading(true);
 
-      // Create payment intent
-      const response = await createPaymentIntent(token, amount, orderId, currency);
+      // Create unique payment intent with timestamp
+      const uniqueOrderId = `order_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const response = await createPaymentIntent(token, amount, uniqueOrderId, currency);
       
       if (response.success) {
-        const { clientSecret, paymentIntentId } = response;
+        const { clientSecret, paymentIntentId, status } = response;
+        
+        // Check if payment intent is already in an invalid state
+        if (status === 'succeeded') {
+          Alert.alert('Error', 'Payment already processed. Please try again.');
+          navigation.goBack();
+          return;
+        }
         
         setPaymentIntent({
           clientSecret,
-          paymentIntentId
+          paymentIntentId,
+          status
         });
 
         const { error } = await initPaymentSheet({
@@ -70,17 +91,15 @@ export default function PaymentScreen({ navigation, route }) {
 
         if (error) {
           console.error('Payment sheet initialization error:', error);
-          Alert.alert('Error', 'Failed to initialize payment');
-          navigation.goBack();
+          setInitError('Unable to setup payment. Please try again.');
         }
       } else {
-        Alert.alert('Error', 'Failed to create payment intent');
-        navigation.goBack();
+        console.error('Payment intent creation failed:', response);
+        setInitError(response.message || 'Failed to create payment intent');
       }
     } catch (error) {
       console.error('Initialize payment error:', error);
-      Alert.alert('Error', 'Failed to initialize payment');
-      navigation.goBack();
+      setInitError('Failed to initialize payment. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -98,27 +117,93 @@ export default function PaymentScreen({ navigation, route }) {
         console.error('Payment sheet error:', error);
         Alert.alert('Payment Failed', error.message);
       } else {
-        // Payment successful - confirm with backend
+        // Payment successful - create order and confirm with backend
         if (paymentIntent?.paymentIntentId) {
           try {
-            await confirmPayment(token, paymentIntent.paymentIntentId);
+            // First confirm the payment with backend
+            const confirmResult = await confirmPayment(token, paymentIntent.paymentIntentId);
+            console.log('Payment confirmed:', confirmResult);
             
-            dispatch(showToast({
-              message: 'Payment successful! Order confirmed.',
-              type: 'success'
-            }));
-
-            // Navigate to order confirmation or orders list
-            navigation.reset({
-              index: 0,
-              routes: [{ name: 'Orders' }],
+            // Create the actual order with payment reference
+            const orderData = formatOrderData(
+              items.map(item => ({
+                product: {
+                  _id: item.productId,
+                  title: item.productName,
+                  price: item.price
+                },
+                qty: item.quantity,
+                size: item.size
+              })),
+              shippingAddress,
+              `Payment ID: ${paymentIntent.paymentIntentId}`
+            );
+            
+            console.log('Creating order with data:', JSON.stringify(orderData, null, 2));
+            
+            const orderResult = await dispatch(createOrderAsync(orderData));
+            
+            console.log('Order creation result:', {
+              fulfilled: createOrderAsync.fulfilled.match(orderResult),
+              rejected: createOrderAsync.rejected.match(orderResult),
+              payload: orderResult.payload,
+              error: orderResult.error
             });
+            
+            if (createOrderAsync.fulfilled.match(orderResult)) {
+              const order = orderResult.payload;
+              console.log('Order created successfully:', order);
+              
+              dispatch(showToast({
+                message: `Payment successful! Order #${order.orderNumber || order._id} confirmed.`,
+                type: 'success'
+              }));
+
+              // Navigate to orders list
+              navigation.reset({
+                index: 0,
+                routes: [{ name: 'MyOrders' }],
+              });
+            } else {
+              console.error('Order creation failed via Redux, trying direct service call:', {
+                payload: orderResult.payload,
+                error: orderResult.error,
+                meta: orderResult.meta
+              });
+              
+              // Try direct service call as fallback
+              try {
+                const { createOrder } = await import('../services/orderService');
+                const directOrder = await createOrder(orderData);
+                console.log('Order created successfully via direct service call:', directOrder);
+                
+                dispatch(showToast({
+                  message: `Payment successful! Order #${directOrder.orderNumber || directOrder._id} confirmed.`,
+                  type: 'success'
+                }));
+
+                navigation.reset({
+                  index: 0,
+                  routes: [{ name: 'MyOrders' }],
+                });
+                return; // Exit early since we succeeded
+              } catch (directError) {
+                console.error('Direct service call also failed:', directError);
+              }
+              
+              const errorMessage = typeof orderResult.payload === 'string' 
+                ? orderResult.payload 
+                : orderResult.payload?.message || 'Failed to create order';
+              
+              throw new Error(errorMessage);
+            }
           } catch (confirmError) {
-            console.error('Payment confirmation error:', confirmError);
+            console.error('Payment confirmation or order creation error:', confirmError);
             dispatch(showToast({
-              message: 'Payment processed but confirmation failed. Please contact support.',
+              message: 'Payment processed but order creation failed. Please contact support with payment ID: ' + paymentIntent.paymentIntentId,
               type: 'warning'
             }));
+            // Don't navigate away, let user try again or contact support
           }
         }
       }
@@ -150,6 +235,40 @@ export default function PaymentScreen({ navigation, route }) {
     );
   }
 
+  if (initError) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+        <View style={[styles.header, { borderBottomColor: theme.border }]}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <Ionicons name="arrow-back" size={24} color={theme.text} />
+          </TouchableOpacity>
+          <Text style={[styles.headerTitle, { color: theme.text }]}>Payment</Text>
+          <View style={styles.placeholder} />
+        </View>
+        
+        <View style={styles.errorContainer}>
+          <Ionicons name="alert-circle-outline" size={64} color={theme.primary} />
+          <Text style={[styles.errorTitle, { color: theme.text }]}>Payment Setup Failed</Text>
+          <Text style={[styles.errorMessage, { color: theme.textSecondary }]}>{initError}</Text>
+          
+          <TouchableOpacity
+            style={[styles.retryButton, { backgroundColor: theme.primary }]}
+            onPress={retryPayment}
+          >
+            <Text style={styles.retryButtonText}>Retry Payment</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={[styles.cancelButton, { borderColor: theme.border }]}
+            onPress={() => navigation.goBack()}
+          >
+            <Text style={[styles.cancelButtonText, { color: theme.text }]}>Cancel</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={[styles.header, { borderBottomColor: theme.border }]}>
@@ -169,6 +288,7 @@ export default function PaymentScreen({ navigation, route }) {
               <View key={index} style={styles.orderItem}>
                 <Text style={[styles.itemName, { color: theme.text }]}>
                   {item.productName || item.name || 'Product'}
+                  {item.size && <Text style={[styles.itemSize, { color: theme.textSecondary }]}> (Size: {item.size})</Text>}
                 </Text>
                 <Text style={[styles.itemDetails, { color: theme.textSecondary }]}>
                   {item.quantity || 1} x {formatAmount(item.price || 0)}
@@ -305,6 +425,10 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     flex: 1,
   },
+  itemSize: {
+    fontSize: 12,
+    fontWeight: '400',
+  },
   itemDetails: {
     fontSize: 14,
   },
@@ -362,6 +486,49 @@ const styles = StyleSheet.create({
   },
   payButtonText: {
     color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 32,
+  },
+  errorTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  errorMessage: {
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 32,
+    lineHeight: 24,
+  },
+  retryButton: {
+    paddingHorizontal: 32,
+    paddingVertical: 16,
+    borderRadius: 12,
+    marginBottom: 12,
+    minWidth: 200,
+    alignItems: 'center',
+  },
+  retryButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  cancelButton: {
+    paddingHorizontal: 32,
+    paddingVertical: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    minWidth: 200,
+    alignItems: 'center',
+  },
+  cancelButtonText: {
     fontSize: 16,
     fontWeight: '600',
   },

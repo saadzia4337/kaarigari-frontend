@@ -32,6 +32,7 @@ import SellerOrdersScreen from '../screens/SellerOrdersScreen';
 import SellerPurchasesScreen from '../screens/SellerPurchasesScreen';
 import OrderDetailScreen from '../screens/OrderDetailScreen';
 import AlertScreen from '../screens/AlertScreen';
+import PaymentScreen from '../screens/PaymentScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -69,6 +70,7 @@ export default function RootNavigator() {
       <Stack.Screen name="SellerOrders" component={SellerOrdersScreen} />
       <Stack.Screen name="SellerPurchases" component={SellerPurchasesScreen} />
       <Stack.Screen name="OrderDetail" component={OrderDetailScreen} />
+      <Stack.Screen name="Payment" component={PaymentScreen} />
       <Stack.Screen name="Alerts" component={AlertScreen} />
     </Stack.Navigator>
   );

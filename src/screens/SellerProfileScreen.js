@@ -37,8 +37,6 @@ export default function SellerProfileScreen({ navigation, route }) {
   );
 
   const openMessage = () => navigation.navigate('SellerMessage', { seller: safeSeller });
-  const openEditProducts = () => navigation.navigate('EditProduct');
-  const openMyPurchases = () => navigation.navigate('SellerPurchases');
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
@@ -57,14 +55,6 @@ export default function SellerProfileScreen({ navigation, route }) {
             <TouchableOpacity style={[styles.messageBtn, { backgroundColor: (theme.primary && theme.primary.trim && theme.primary.trim()) || '#6366f1' }]} onPress={openMessage}>
               <Ionicons name="chatbubble-outline" size={22} color="#fff" />
               <Text style={styles.messageBtnText}>Message</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={[styles.editBtn, { backgroundColor: '#28a745' }]} onPress={openEditProducts}>
-              <Ionicons name="create-outline" size={22} color="#fff" />
-              <Text style={styles.editBtnText}>Edit Products</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={[styles.purchasesBtn, { backgroundColor: '#FF9500' }]} onPress={openMyPurchases}>
-              <Ionicons name="cart-outline" size={22} color="#fff" />
-              <Text style={styles.purchasesBtnText}>My Purchases</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -113,7 +103,7 @@ const styles = StyleSheet.create({
   itemCount: { fontSize: 14, marginBottom: 16 },
   actionButtons: { flexDirection: 'row', gap: 12 },
   buttonRow: { flexDirection: 'row', gap: 12, marginTop: 16 },
-  messageBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 10, borderRadius: 8 },
+  messageBtn: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 32, paddingVertical: 12, borderRadius: 8 },
   messageBtnText: { color: '#fff', marginLeft: 8, fontSize: 15, fontWeight: '600' },
   editBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 10, borderRadius: 8 },
   editBtnText: { color: '#fff', marginLeft: 8, fontSize: 15, fontWeight: '600' },

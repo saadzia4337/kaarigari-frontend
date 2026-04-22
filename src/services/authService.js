@@ -136,3 +136,28 @@ export async function updateProfile(token, payload) {
   if (!response.ok) throw Object.assign(new Error(data.message || 'Update failed'), { response: { data } });
   return data;
 }
+
+/**
+ * Update password for authenticated user.
+ * @param {string} token - Auth token
+ * @param {string} currentPassword - Current password
+ * @param {string} newPassword - New password
+ * @returns {Promise<{ message: string }>}
+ */
+export async function updatePassword(token, currentPassword, newPassword) {
+  try {
+    const response = await api.put('/api/auth/password', {
+      currentPassword,
+      newPassword
+    }, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+    return response.data;
+  } catch (err) {
+    const message = err.response?.data?.message || 'Failed to update password';
+    console.error('Update password error:', err.response?.data);
+    throw Object.assign(err, { userMessage: message });
+  }
+}

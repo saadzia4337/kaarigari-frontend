@@ -114,18 +114,23 @@ export default function MessageScreen({ navigation, route }) {
   const [filteredConversations, setFilteredConversations] = useState([]);
 
   const loadConversations = async () => {
-    if (!token) return;
+    if (!token) {
+      setLoading(false);
+      return;
+    }
     
     try {
       setLoading(true);
       
       // Load actual conversations from API
       const conversationList = await getConversations(token);
-      setConversations(conversationList);
-      setFilteredConversations(conversationList);
+      console.log('Loaded conversations:', conversationList?.length || 0);
+      setConversations(conversationList || []);
+      setFilteredConversations(conversationList || []);
     } catch (error) {
       console.error('Failed to load conversations:', error);
       setConversations([]);
+      setFilteredConversations([]);
     } finally {
       setLoading(false);
     }
@@ -224,6 +229,7 @@ export default function MessageScreen({ navigation, route }) {
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
+            <Ionicons name="chatbubble-ellipses-outline" size={48} color={theme.textSecondary} style={styles.emptyIcon} />
             <Text style={[styles.emptyText, { color: theme.textSecondary }]}>
               {searchQuery.trim() === '' 
                 ? 'No conversations yet. Message sellers from product pages to start chatting!'
@@ -325,6 +331,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingTop: 50,
+  },
+  emptyIcon: {
+    marginBottom: 16,
   },
   emptyText: {
     fontSize: 16,

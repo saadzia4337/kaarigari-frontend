@@ -98,23 +98,60 @@ export default function ProfileScreen({ navigation }) {
         <Text style={[styles.headerTitle, { color: theme.text }]} numberOfLines={1}>
           {user.firstName} {user.lastName}
         </Text>
-        {/* <TouchableOpacity onPress={goToEdit} style={styles.editBtn}>
+        <TouchableOpacity onPress={goToEdit} style={styles.editBtn}>
           <Ionicons name="pencil" size={22} color={theme.primary?.trim() || theme.text} />
           <Text style={[styles.editBtnText, { color: theme.primary?.trim() || theme.text }]}>Edit</Text>
-        </TouchableOpacity> */}
+        </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* My profile - when seller, tap to open SellerProfileScreen; admin has no profile card */}
-        {!isAdmin && (
+        {/* My profile - only for sellers, navigates to SellerProfile */}
+        {isSeller && (
           <TouchableOpacity
-            activeOpacity={isSeller ? 0.7 : 1}
-            onPress={isSeller ? goToSellerProfile : undefined}
-            disabled={!isSeller}
-            style={[styles.profileCard, styles.myProfileRow, { backgroundColor: theme.backgroundSecondary, borderColor: theme.border }]}
+            activeOpacity={0.7}
+            onPress={goToSellerProfile}
+            style={[styles.profileCard, { backgroundColor: theme.backgroundSecondary, borderColor: theme.border }]}
           >
-            <Text style={[styles.myProfileLabel, { color: theme.text }]}>My profile</Text>
-            {isSeller && <Ionicons name="chevron-forward" size={20} color={theme.muted} />}
+            <View style={styles.profileRow}>
+              {profilePicUri ? (
+                <Image source={{ uri: profilePicUri }} style={styles.avatarImg} />
+              ) : (
+                <View style={[styles.avatarWrap, { backgroundColor: theme.backgroundSecondary, borderColor: theme.border }]}>
+                  <Text style={[styles.avatarText, { color: theme.text }]}>
+                    {(user.firstName?.[0] || '') + (user.lastName?.[0] || '') || 'U'}
+                  </Text>
+                </View>
+              )}
+              <View style={styles.profileInfo}>
+                <Text style={[styles.name, { color: theme.text }]}>
+                  {user.firstName} {user.lastName}
+                </Text>
+                <Text style={[styles.email, { color: theme.textSecondary }]}>{user.email}</Text>
+                <View style={styles.roleContainer}>
+                  <Text style={[
+                    styles.roleBadge, 
+                    { 
+                      color: '#388e3c',
+                      borderColor: '#388e3c',
+                      backgroundColor: theme.background
+                    }
+                  ]}>
+                    Seller
+                  </Text>
+                </View>
+                {user.shopName && (
+                  <Text style={[styles.bio, { color: theme.textSecondary }]}>
+                    🏪 {user.shopName}
+                  </Text>
+                )}
+                {user.bio && (
+                  <Text style={[styles.bio, { color: theme.textSecondary }]} numberOfLines={2}>
+                    {user.bio}
+                  </Text>
+                )}
+              </View>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={theme.muted} style={styles.cardChevron} />
           </TouchableOpacity>
         )}
 
@@ -127,7 +164,7 @@ export default function ProfileScreen({ navigation }) {
               <MenuRow icon="pricetag-outline" label="Add Category" onPress={() => navigation.navigate('AdminCategories')} theme={theme} />
               <MenuRow icon="storefront-outline" label="Show All Sellers" onPress={() => navigation.navigate('AllSellers')} theme={theme} />
               <MenuRow icon="people-outline" label="Show All Buyers" onPress={() => navigation.navigate('AllBuyers')} theme={theme} />
-                <MenuRow icon="receipt-outline" label="My orders" onPress={goToMyOrders} theme={theme} />
+              <MenuRow icon="receipt-outline" label="My orders" onPress={goToMyOrders} theme={theme} />
             </>
           ) : isSeller ? (
             <>
@@ -135,6 +172,7 @@ export default function ProfileScreen({ navigation }) {
               <MenuRow icon="cart-outline" label="My purchases" onPress={goToSellerPurchases} theme={theme} />
               <MenuRow icon="receipt-outline" label="All orders" onPress={goToAllOrders} theme={theme} />
               <MenuRow icon="add-circle-outline" label="Add product" onPress={() => navigation.navigate('AddProduct')} theme={theme} />
+              <MenuRow icon="create-outline" label="Edit products" onPress={() => navigation.navigate('EditProduct')} theme={theme} />
               <MenuRow icon="resize-outline" label="Size charts" onPress={() => navigation.navigate('SizeCharts')} theme={theme} />
             </>
           ) : (
@@ -194,10 +232,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
   },
-  cardChevron: { marginLeft: 8 },
-  myProfileRow: { justifyContent: 'space-between' },
-  myProfileLabel: { fontSize: 16, fontWeight: '600' },
+  cardChevron: { marginLeft: 12 },
   profileRow: { flexDirection: 'row', alignItems: 'center', flex: 1 },
   avatarWrap: {
     width: 72,
@@ -209,14 +246,23 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     marginRight: 16,
   },
-  avatarImg: { width: '100%', height: '100%' },
+  avatarImg: { width: 72, height: 72, borderRadius: 36 },
   avatarText: { fontSize: 24, fontWeight: '700' },
   profileInfo: { flex: 1 },
-  name: { fontSize: 18, fontWeight: '700', marginBottom: 4 },
-  email: { fontSize: 14, marginBottom: 4 },
-  roleBadge: { fontSize: 12, fontWeight: '600', borderWidth: 1, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, alignSelf: 'flex-start' },
-  address: { fontSize: 13, marginTop: 6 },
-  bio: { fontSize: 13, marginTop: 6 },
+  name: { fontSize: 18, fontWeight: '700', marginBottom: 2 },
+  email: { fontSize: 14, marginBottom: 6 },
+  roleContainer: { marginBottom: 6 },
+  roleBadge: { 
+    fontSize: 12, 
+    fontWeight: '600', 
+    borderWidth: 1, 
+    paddingHorizontal: 8, 
+    paddingVertical: 4, 
+    borderRadius: 8, 
+    alignSelf: 'flex-start' 
+  },
+  address: { fontSize: 13, marginTop: 2 },
+  bio: { fontSize: 13, marginTop: 2 },
 
   section: { marginTop: 24, paddingTop: 16, paddingHorizontal: 20, borderTopWidth: 1 },
   sectionTitle: { fontSize: 16, fontWeight: '700', marginBottom: 12 },

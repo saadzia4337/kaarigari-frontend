@@ -108,13 +108,13 @@ export default function HomeScreen({ navigation }) {
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       <Header navigation={navigation} />
-      <View style={[styles.helloBar, { backgroundColor: theme.backgroundSecondary, borderBottomColor: theme.border }]}>
+      {/* <View style={[styles.helloBar, { backgroundColor: theme.backgroundSecondary, borderBottomColor: theme.border }]}>
         {helloLoading && <ActivityIndicator size="small" color={theme.primary?.trim() || '#6366f1'} />}
         {helloError && <Text style={[styles.helloText, { color: '#c62828' }]}>{helloError}</Text>}
         {!helloLoading && !helloError && helloMessage && (
           <Text style={[styles.helloText, { color: theme.primary?.trim() || theme.text }]}>{helloMessage}</Text>
         )}
-      </View>
+      </View> */}
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}

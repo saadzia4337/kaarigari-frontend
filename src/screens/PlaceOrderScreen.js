@@ -60,42 +60,23 @@ export default function PlaceOrderScreen({ navigation, route }) {
       return;
     }
 
-    setPlacingOrder(true);
+    // Prepare order details for payment
+    const orderDetails = {
+      items: items.map(item => ({
+        productId: item.product._id,
+        productName: item.product.title,
+        quantity: item.qty,
+        price: item.product.price,
+        size: item.size
+      })),
+      totalAmount: total,
+      currency: 'usd',
+      shippingAddress: defaultAddress,
+      sellerName: sellerName
+    };
 
-    try {
-      // Format order data
-      const orderData = formatOrderData(items, defaultAddress, '');
-      
-      // Create order
-      const result = await dispatch(createOrderAsync(orderData));
-      
-      if (createOrderAsync.fulfilled.match(result)) {
-        // Clear cart for these items (only for the specific seller)
-        const cartItemIdsToRemove = items.map(item => item.id);
-        
-        // Show success message
-        dispatch(showToast({ 
-          message: `Order placed successfully! Order #${result.payload.orderNumber}`, 
-          type: 'success' 
-        }));
-        
-        // Navigate to Home page
-        navigation.navigate('MainTabs');
-      } else {
-        // Handle error
-        dispatch(showToast({ 
-          message: result.payload || 'Failed to place order', 
-          type: 'error' 
-        }));
-      }
-    } catch (error) {
-      dispatch(showToast({ 
-        message: 'Failed to place order. Please try again.', 
-        type: 'error' 
-      }));
-    } finally {
-      setPlacingOrder(false);
-    }
+    // Navigate to payment screen instead of creating order directly
+    navigation.navigate('Payment', { orderDetails });
   };
 
   return (
