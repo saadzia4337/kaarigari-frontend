@@ -1,6 +1,7 @@
 apply plugin: "com.android.application"
 apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
+apply from: file("../../node_modules/react-native-vector-icons/fonts.gradle")
 
 /**
  * This is the configuration block to customize your React Native Android app.
@@ -80,10 +81,16 @@ android {
     namespace "com.kaarigari"
     defaultConfig {
         applicationId "com.kaarigari"
-        minSdkVersion rootProject.ext.minSdkVersion
+        minSdkVersion 24  // Hermes requires 24+
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0"
+        // Force CMake/AGP to use API 24 (avoids CXX1214 when AGP passes wrong minSdk)
+        externalNativeBuild {
+            cmake {
+                arguments "-DANDROID_PLATFORM=android-24"
+            }
+        }
     }
     signingConfigs {
         debug {
@@ -106,6 +113,8 @@ android {
         }
     }
 }
+// Force minSdk 24 after DSL so variant/CMake see it (fixes CXX1214)
+android.defaultConfig.minSdkVersion 24
 
 dependencies {
     // The version of react-native is set by the React Native Gradle Plugin
