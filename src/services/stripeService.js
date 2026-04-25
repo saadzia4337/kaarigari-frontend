@@ -31,10 +31,10 @@ export const getStripeConfig = async () => {
  * @param {string} token - Auth token
  * @param {number} amount - Amount in currency units (e.g., 29.99)
  * @param {string} orderId - Order ID
- * @param {string} currency - Currency code (default: 'usd')
+ * @param {string} currency - Currency code (default: 'pkr')
  * @returns {Promise<Object>} Payment intent with client secret
  */
-export const createPaymentIntent = async (token, amount, orderId, currency = 'usd') => {
+export const createPaymentIntent = async (token, amount, orderId, currency = 'pkr') => {
   try {
     const response = await fetch(`${API_BASE_URL}/api/stripe/create-payment-intent`, {
       method: 'POST',
@@ -134,7 +134,7 @@ export const createRefund = async (token, paymentIntentId, amount) => {
  * @param {string} currency - Currency code
  * @returns {string} Formatted amount
  */
-export const formatAmount = (amount, currency = 'USD') => {
+export const formatAmount = (amount, currency = 'PKR') => {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: currency.toUpperCase(),

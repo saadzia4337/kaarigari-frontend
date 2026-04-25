@@ -13,6 +13,7 @@ import {
   TouchableOpacity,
   Dimensions,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../theme/ThemeContext';
 import { imageUrl } from '../services/productService';
 import { bannerSlides as mockBannerSlides } from '../data/mock';
@@ -22,6 +23,7 @@ const BANNER_HEIGHT = 200;
 
 export default function PrimaryBanner({ slides: slidesProp }) {
   const theme = useTheme();
+  const navigation = useNavigation();
   const [activeIndex, setActiveIndex] = useState(0);
   const flatListRef = useRef(null);
   const slides = (slidesProp && slidesProp.length > 0) ? slidesProp : mockBannerSlides;
@@ -49,7 +51,7 @@ export default function PrimaryBanner({ slides: slidesProp }) {
           </Text>
           <TouchableOpacity
             style={[styles.cta, { backgroundColor: theme.white }]}
-            onPress={() => {}}
+            onPress={() => navigation.navigate('Products')}
           >
             <Text style={[styles.ctaText, { color: theme.primary }]}>
               {item.cta}
@@ -95,11 +97,11 @@ export default function PrimaryBanner({ slides: slidesProp }) {
 const styles = StyleSheet.create({
   wrapper: { marginVertical: 12 },
   slide: { height: BANNER_HEIGHT },
-  bgImage: { flex: 1, borderRadius: 12, overflow: 'hidden', marginHorizontal: 16 },
-  bgImageStyle: { borderRadius: 12 },
+  bgImage: { flex: 1, borderRadius: 6, overflow: 'hidden', marginHorizontal: 16 },
+  bgImageStyle: { borderRadius: 6 },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    borderRadius: 12,
+    borderRadius: 6,
   },
   content: {
     flex: 1,

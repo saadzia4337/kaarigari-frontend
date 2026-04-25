@@ -21,6 +21,34 @@ import ProfileScreen from '../screens/ProfileScreen';
 
 const Tab = createBottomTabNavigator();
 
+// Badge component for tab icons (moved outside to avoid hook ordering issues)
+const TabBadge = ({ count, theme }) => {
+  if (count <= 0) return null;
+  return (
+    <View style={{
+      position: 'absolute',
+      top: -6,
+      right: -6,
+      backgroundColor: theme.primary?.trim?.() || theme.primary,
+      borderRadius: 10,
+      minWidth: 20,
+      height: 20,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: 6,
+      zIndex: 1,
+    }}>
+      <Text style={{
+        color: '#fff',
+        fontSize: 11,
+        fontWeight: '600',
+      }}>
+        {count > 99 ? '99+' : count}
+      </Text>
+    </View>
+  );
+};
+
 export default function TabNavigator() {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
@@ -59,34 +87,6 @@ export default function TabNavigator() {
     
     return () => clearInterval(interval);
   }, [token]);
-  
-  // Badge component for tab icons
-  const TabBadge = ({ count }) => {
-    if (count <= 0) return null;
-    return (
-      <View style={{
-        position: 'absolute',
-        top: -6,
-        right: -6,
-        backgroundColor: theme.primary?.trim?.() || theme.primary,
-        borderRadius: 10,
-        minWidth: 20,
-        height: 20,
-        justifyContent: 'center',
-        alignItems: 'center',
-        paddingHorizontal: 6,
-        zIndex: 1,
-      }}>
-        <Text style={{
-          color: '#fff',
-          fontSize: 11,
-          fontWeight: '600',
-        }}>
-          {count > 99 ? '99+' : count}
-        </Text>
-      </View>
-    );
-  };
 
   return (
     <Tab.Navigator
@@ -129,7 +129,7 @@ export default function TabNavigator() {
                 size={size ?? 24}
                 color={color}
               />
-              <TabBadge count={unreadChatCount} />
+              <TabBadge count={unreadChatCount} theme={theme} />
             </View>
           ),
         }}

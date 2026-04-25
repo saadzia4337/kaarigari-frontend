@@ -70,7 +70,7 @@ export default function PlaceOrderScreen({ navigation, route }) {
         size: item.size
       })),
       totalAmount: total,
-      currency: 'usd',
+      currency: 'pkr',
       shippingAddress: defaultAddress,
       sellerName: sellerName
     };

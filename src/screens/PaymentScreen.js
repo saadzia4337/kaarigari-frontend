@@ -32,7 +32,7 @@ export default function PaymentScreen({ navigation, route }) {
   
   // Get order details from route params
   const { orderDetails } = route.params || {};
-  const { items, totalAmount, currency = 'usd', shippingAddress, sellerName } = orderDetails || {};
+  const { items, totalAmount, currency = 'pkr', shippingAddress, sellerName } = orderDetails || {};
   const amount = totalAmount;
   const orderItems = items;
 

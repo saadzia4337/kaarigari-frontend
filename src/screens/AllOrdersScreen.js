@@ -9,7 +9,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useDispatch, useSelector } from 'react-redux';
 import { useTheme } from '../theme/ThemeContext';
-import { fetchOrdersAsync, fetchSellerOrdersAsync, updateOrderStatusAsync, fetchOrderStatsAsync } from '../store/slices/ordersSlice';
+import { fetchOrdersAsync, fetchSellerOrdersAsync, updateOrderStatusAsync } from '../store/slices/ordersSlice';
 import { updateSellerOrderStatus } from '../services/orderService';
 import { showToast } from '../store/slices/toastSlice';
 import { formatPrice, formatOrderDate } from '../services/orderService';
@@ -62,17 +62,6 @@ const styles = StyleSheet.create({
   authRequiredSubtitle: { fontSize: 14, textAlign: 'center', marginTop: 8, marginBottom: 24 },
   loginButton: { paddingVertical: 12, paddingHorizontal: 24, borderRadius: 8 },
   loginButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  statsCard: {
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    marginBottom: 16,
-  },
-  statsTitle: { fontSize: 18, fontWeight: '600', marginBottom: 12 },
-  statsRow: { flexDirection: 'row', justifyContent: 'space-around' },
-  statItem: { alignItems: 'center' },
-  statValue: { fontSize: 20, fontWeight: '700' },
-  statLabel: { fontSize: 12, marginTop: 4 },
   filterSection: { paddingHorizontal: 16, paddingVertical: 8 },
   filterList: { paddingRight: 16 },
   statusOption: {
@@ -264,7 +253,6 @@ export default function AllOrdersScreen({ navigation }) {
   const orders = useSelector((state) => state.orders.orders);
   const loading = useSelector((state) => state.orders.loading);
   const updating = useSelector((state) => state.orders.updating);
-  const stats = useSelector((state) => state.orders.stats);
   const pagination = useSelector((state) => state.orders.pagination);
   
   const [refreshing, setRefreshing] = useState(false);
@@ -274,7 +262,6 @@ export default function AllOrdersScreen({ navigation }) {
 
   useEffect(() => {
     loadOrders();
-    loadStats();
   }, [selectedStatus]);
 
   const loadOrders = async (page = 1) => {
@@ -299,18 +286,9 @@ export default function AllOrdersScreen({ navigation }) {
     }
   };
 
-  const loadStats = async () => {
-    try {
-      await dispatch(fetchOrderStatsAsync());
-    } catch (error) {
-      console.error('Failed to load stats:', error);
-    }
-  };
-
   const handleRefresh = async () => {
     setRefreshing(true);
     await loadOrders(1);
-    await loadStats();
     setRefreshing(false);
   };
 
@@ -575,33 +553,11 @@ export default function AllOrdersScreen({ navigation }) {
     </TouchableOpacity>
   );
 
-  const renderStatsCard = () => {
-    if (!stats) return null;
-    
-    return (
-      <View style={[styles.statsCard, { backgroundColor: theme.backgroundSecondary, borderColor: theme.border }]}>
-        <Text style={[styles.statsTitle, { color: theme.text }]}>Order Statistics</Text>
-        <View style={styles.statsRow}>
-          <View style={styles.statItem}>
-            <Text style={[styles.statValue, { color: theme.text }]}>{stats.totalOrders}</Text>
-            <Text style={[styles.statLabel, { color: theme.textSecondary }]}>Total Orders</Text>
-          </View>
-          <View style={styles.statItem}>
-            <Text style={[styles.statValue, { color: theme.text }]}>{formatPrice(stats.totalRevenue)}</Text>
-            <Text style={[styles.statLabel, { color: theme.textSecondary }]}>Total Revenue</Text>
-          </View>
-        </View>
-      </View>
-    );
-  };
-
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
       <View style={[styles.header, { borderBottomColor: theme.border }]}>
         <Text style={[styles.headerTitle, { color: theme.text }]}>All Orders</Text>
       </View>
-
-      {renderStatsCard()}
 
       <View style={styles.filterSection}>
         <FlatList

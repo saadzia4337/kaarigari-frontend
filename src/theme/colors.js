@@ -9,7 +9,7 @@ const PRIMARY = '#0D1321';
 export const lightColors = {
   primary: PRIMARY,
   background: '#ffffff',
-  backgroundSecondary: '#f5f5f5',
+  backgroundSecondary: '#9d9da064',
   text: '#1a1a1a',
   textSecondary: '#666666',
   card: '#ffffff',

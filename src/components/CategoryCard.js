@@ -30,7 +30,7 @@ export default function CategoryCard({ name, image, onPress, categoryId }) {
       >
         <Image source={{ uri: image }} style={styles.image} />
       </View>
-      <Text style={[styles.label, { color: theme.textSecondary }]} numberOfLines={1}>
+      <Text style={styles.label} numberOfLines={2}>
         {name}
       </Text>
     </TouchableOpacity>
@@ -42,7 +42,7 @@ const styles = StyleSheet.create({
   imageWrap: {
     width: CARD_SIZE,
     height: CARD_SIZE,
-    borderRadius: 12,
+    borderRadius: 6,
     overflow: 'hidden',
     borderWidth: 1,
     shadowOffset: { width: 0, height: 2 },
@@ -51,5 +51,10 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   image: { width: '100%', height: '100%', resizeMode: 'cover' },
-  label: { fontSize: 12, marginTop: 6, textAlign: 'center' },
+  label: { 
+    fontSize: 12, 
+    marginTop: 6, 
+    textAlign: 'center',
+    width: 80,
+  },
 });

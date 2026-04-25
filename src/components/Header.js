@@ -3,8 +3,7 @@
  * @format
  */
 
-import React, { useEffect } from 'react';
-import { useDispatch } from 'react-redux';
+import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -12,8 +11,7 @@ import { useSelector } from 'react-redux';
 import { useTheme } from '../theme/ThemeContext';
 import { selectCartCount } from '../store/slices/cartSlice';
 import { selectWishlistCount } from '../store/slices/wishlistSlice';
-import { selectUnreadAlertCount, selectAllAlerts, setUnreadCount, setAlerts } from '../store/slices/alertSlice';
-import { getUnreadAlertCount, createApiInstance } from '../services/orderService';
+import { selectUnreadAlertCount, selectAllAlerts } from '../store/slices/alertSlice';
 
 const primaryBg = (theme) => theme.primary?.trim?.() || theme.primary;
 
@@ -24,85 +22,15 @@ export default function Header({ navigation }) {
   const favCount = useSelector(selectWishlistCount);
   const unreadAlertCount = useSelector(selectUnreadAlertCount);
   const allAlerts = useSelector(selectAllAlerts);
-  const dispatch = useDispatch();
 
   // Fallback: Calculate unread count from alerts if API count is 0 but alerts exist
   const calculatedUnreadCount = unreadAlertCount > 0 ? unreadAlertCount : allAlerts.filter(alert => !alert.read).length;
-
-  // Debug: Log all alert-related data
-  console.log('Header - unreadAlertCount:', unreadAlertCount);
-  console.log('Header - allAlerts length:', allAlerts.length);
-  console.log('Header - allAlerts:', allAlerts);
-  console.log('Header - calculatedUnreadCount:', calculatedUnreadCount);
-  console.log('Header - should show badge?', calculatedUnreadCount > 0);
-  
-  // Add debug log to track when component re-renders
-  useEffect(() => {
-    console.log('Header: Component re-rendered, unread count:', unreadAlertCount);
-  }, [unreadAlertCount]); // Re-render when count changes
-
-  // Fetch unread alert count periodically
-  useEffect(() => {
-    const fetchUnreadCount = async () => {
-      try {
-        console.log('Header: Fetching unread count...');
-        const response = await getUnreadAlertCount();
-        console.log('Header: API response:', response);
-        
-        // Handle different response structures
-        let count = 0;
-        if (response?.data !== undefined) {
-          if (typeof response.data === 'object' && response.data.data !== undefined) {
-            count = response.data.data;
-          } else {
-            count = response.data;
-          }
-        } else if (response !== undefined) {
-          count = response;
-        }
-        
-        console.log('Header: Extracted count:', count);
-        dispatch(setUnreadCount(count));
-      } catch (error) {
-        console.error('Header: Failed to fetch unread count:', error);
-      }
-    };
-
-    // Fetch alerts data on mount to ensure we have alert data
-    const fetchAlerts = async () => {
-      try {
-        console.log('Header: Fetching alerts data...');
-        const api = await createApiInstance();
-        const response = await api.get('/alerts');
-        
-        if (response.data.success) {
-          console.log('Header: Successfully fetched alerts:', response.data.data);
-          dispatch(setAlerts(response.data.data));
-        }
-      } catch (error) {
-        console.error('Header: Failed to fetch alerts:', error);
-      }
-    };
-
-    // Fetch immediately on mount
-    fetchUnreadCount();
-    fetchAlerts();
-    
-    // Set up polling for new alerts
-    const interval = setInterval(fetchUnreadCount, 5000); // Check every 5 seconds
-    
-    return () => {
-      console.log('Header: Cleaning up unread count polling');
-      clearInterval(interval);
-    };
-  }, []); // Empty dependency array - only run once
 
   const goToWishlist = () => navigation?.navigate('Wishlist');
   const goToCart = () => navigation?.navigate('Cart');
   const goToAlerts = () => navigation?.navigate('Alerts');
 
   const Badge = ({ count }) => {
-    console.log('Badge component - count:', count, 'should show:', count > 0);
     return count > 0 ? (
       <View style={[styles.badge, { backgroundColor: primaryBg(theme) }]}>
         <Text style={styles.badgeText}>{count > 99 ? '99+' : count}</Text>

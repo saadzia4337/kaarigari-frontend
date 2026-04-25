@@ -230,7 +230,7 @@ const ProductsScreen = () => {
       </View>
       
       {/* Categories FlatList */}
-      <View style={styles.categoriesContainer}>
+      <View style={[styles.categoriesContainer, { borderBottomColor: theme.border }]}>
         <FlatList
           data={categories}
           renderItem={renderCategory}

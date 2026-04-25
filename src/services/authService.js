@@ -1,14 +1,7 @@
 import axios from 'axios';
-import { Platform } from 'react-native';
-import { API_HOST_OVERRIDE } from '../config/api';
+import { API_CONFIG } from '../config/api';
 
-const API_PORT = '5000';
-// Android emulator: 10.0.2.2. Physical device: set API_HOST_OVERRIDE in src/config/api.js to your PC IP.
-const androidHost = API_HOST_OVERRIDE || '10.0.2.2';
-export const API_BASE_URL =
-  Platform.OS === 'android'
-    ? `http://${androidHost}:${API_PORT}`
-    : `http://localhost:${API_PORT}`;
+export const API_BASE_URL = API_CONFIG.BASE_URL;
 
 const API_TIMEOUT_MS = 15000;
 

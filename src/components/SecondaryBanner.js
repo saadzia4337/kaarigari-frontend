@@ -50,10 +50,10 @@ const styles = StyleSheet.create({
     height: HEIGHT,
     justifyContent: 'center',
     paddingLeft: 20,
-    borderRadius: 12,
+    borderRadius: 6,
     overflow: 'hidden',
   },
-  bgImageStyle: { borderRadius: 12 },
+  bgImageStyle: { borderRadius: 6 },
   overlay: {
     ...StyleSheet.absoluteFillObject,
     borderRadius: 12,
