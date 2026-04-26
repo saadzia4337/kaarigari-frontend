@@ -22,7 +22,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { useSelector, useDispatch } from 'react-redux';
 import { selectAllProducts, fetchProducts } from '../store/slices/productsSlice';
 import { selectCategories, fetchCategories } from '../store/slices/categoriesSlice';
-import { formatPrice } from '../config/currency';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import ProductCard from '../components/ProductCard';
 
 const ProductsScreen = () => {
@@ -199,16 +199,19 @@ const ProductsScreen = () => {
 
   if (loading) {
     return (
-      <View style={[styles.container, { backgroundColor: theme.background }]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: '#fff' }]} edges={['top']}>
+        <View style={[styles.header, { backgroundColor: theme.primary?.trim?.() || theme.primary, borderBottomColor: theme.border }]}>
+          <Text style={[styles.headerTitle, { color: '#fff' }]}>All Products</Text>
+        </View>
         <ActivityIndicator size="large" color={theme.primary} style={styles.loader} />
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.background }]}>
-      <View style={styles.header}>
-        <Text style={[styles.headerTitle, { color: theme.text }]}>All Products</Text>
+    <SafeAreaView style={[styles.container, { backgroundColor: '#fff' }]} edges={['top']}>
+      <View style={[styles.header, { backgroundColor: theme.primary?.trim?.() || theme.primary, borderBottomColor: theme.border }]}>
+        <Text style={[styles.headerTitle, { color: '#fff' }]}>All Products</Text>
       </View>
       
       {/* Search Bar */}
@@ -293,7 +296,7 @@ const ProductsScreen = () => {
           </View>
         )}
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -302,9 +305,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    padding: 16,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
   },
   headerTitle: {
     fontSize: 24,

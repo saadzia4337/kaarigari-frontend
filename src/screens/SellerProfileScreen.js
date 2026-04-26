@@ -3,8 +3,8 @@
  * @format
  */
 
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, ActivityIndicator } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useDispatch, useSelector } from 'react-redux';
@@ -22,6 +22,7 @@ export default function SellerProfileScreen({ navigation, route }) {
   const sellerId = route?.params?.sellerId || seller?.id;
   const { user } = useSelector((state) => state.auth);
   const { list: sellerProducts, loading } = useSelector((state) => state.products);
+  const [refreshing, setRefreshing] = useState(false);
   const safeSeller = {
     id: seller.id,
     name: seller.name || 'Seller',
@@ -38,15 +39,42 @@ export default function SellerProfileScreen({ navigation, route }) {
 
   const openMessage = () => navigation.navigate('SellerMessage', { seller: safeSeller });
 
+  const handleProductPress = (product) => {
+    navigation.navigate('ProductDetail', { product });
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await dispatch(fetchProducts({ sellerId })).unwrap();
+    } catch (error) {
+      console.log('Refresh seller products error:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
-      <View style={[styles.header, { borderBottomColor: theme.border }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: '#fff' }]} edges={['top']}>
+      <View style={[styles.header, { backgroundColor: theme.primary?.trim?.() || theme.primary, borderBottomColor: theme.border }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={24} color={theme.text} />
+          <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: theme.text }]}>Seller</Text>
+        <Text style={[styles.headerTitle, { color: '#fff' }]}>Seller</Text>
       </View>
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        style={styles.scroll} 
+        contentContainerStyle={styles.scrollContent} 
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={theme.primary}
+            colors={[theme.primary]}
+          />
+        }
+      >
         <View style={styles.profileSection}>
           <Image source={{ uri: safeSeller.image }} style={styles.avatar} />
           <Text style={[styles.sellerName, { color: theme.text }]}>{safeSeller.name}</Text>
@@ -70,7 +98,7 @@ export default function SellerProfileScreen({ navigation, route }) {
                 <View key={item._id || item.id} style={[styles.cardWrap, index % 2 === 0 ? styles.cardLeft : styles.cardRight]}>
                   <ProductCard
                     product={item}
-                    onPress={(p) => navigation.navigate('ProductDetail', { product: p })}
+                    onPress={handleProductPress}
                     sellerName={item.sellerName}
                     sellerType={item.sellerType}
                     sellerAvatar={item.sellerAvatar}
@@ -92,7 +120,7 @@ export default function SellerProfileScreen({ navigation, route }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', paddingVertical: 16, paddingHorizontal: 16, borderBottomWidth: 1 },
+  header: { flexDirection: 'row', alignItems: 'center', paddingVertical: 16, paddingHorizontal: 20, borderBottomWidth: 1 },
   backBtn: { padding: 4, marginRight: 8 },
   headerTitle: { fontSize: 22, fontWeight: '700', flex: 1 },
   scroll: { flex: 1 },

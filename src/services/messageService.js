@@ -11,6 +11,14 @@ const API_TIMEOUT_MS = 15000;
  * Normalize message from API response
  */
 function normalizeMessage(apiMessage) {
+  // Helper function to construct full image URL
+  const getImageUrl = (imagePath) => {
+    if (!imagePath) return null;
+    if (imagePath.startsWith('http')) return imagePath;
+    const base = API_BASE_URL.replace(/\/$/, '');
+    return `${base}/${imagePath.replace(/^\//, '')}`;
+  };
+
   return {
     id: apiMessage._id,
     text: apiMessage.content,
@@ -18,7 +26,10 @@ function normalizeMessage(apiMessage) {
     time: new Date(apiMessage.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     timestamp: apiMessage.createdAt,
     senderName: apiMessage.sender?.firstName + ' ' + apiMessage.sender?.lastName,
-    sender: apiMessage.sender,
+    sender: {
+      ...apiMessage.sender,
+      profilePic: getImageUrl(apiMessage.sender?.profilePic)
+    },
     receiver: apiMessage.receiver,
     read: apiMessage.read,
     readAt: apiMessage.readAt
@@ -29,12 +40,20 @@ function normalizeMessage(apiMessage) {
  * Normalize conversation from API response
  */
 function normalizeConversation(apiConversation) {
+  // Helper function to construct full image URL
+  const getImageUrl = (imagePath) => {
+    if (!imagePath) return null;
+    if (imagePath.startsWith('http')) return imagePath;
+    const base = API_BASE_URL.replace(/\/$/, '');
+    return `${base}/${imagePath.replace(/^\//, '')}`;
+  };
+
   return {
     id: apiConversation.id,
     seller: {
       id: apiConversation.partner._id,
       name: apiConversation.partner.firstName + ' ' + apiConversation.partner.lastName,
-      avatar: apiConversation.partner.profilePic
+      avatar: getImageUrl(apiConversation.partner.profilePic)
     },
     lastMessage: apiConversation.lastMessage.content,
     timestamp: apiConversation.lastMessage.createdAt,

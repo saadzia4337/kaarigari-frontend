@@ -169,3 +169,32 @@ export async function updateProduct(productId, productData, token) {
   }
   return normalizeProduct(data);
 }
+
+/**
+ * Delete a product
+ * @param {string} productId - Product ID
+ * @param {string} token - JWT
+ */
+export async function deleteProduct(productId, token) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
+  
+  const response = await fetch(`${API_BASE_URL}/api/products/${productId}`, {
+    method: 'DELETE',
+    headers: {
+      Accept: 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    signal: controller.signal,
+  });
+  
+  clearTimeout(timeoutId);
+  const data = await response.json();
+  if (!response.ok) {
+    const err = new Error(data.message || 'Failed to delete product');
+    err.response = { status: response.status, data };
+    err.userMessage = data.message || 'Failed to delete product';
+    throw err;
+  }
+  return data;
+}

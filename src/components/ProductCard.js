@@ -39,7 +39,7 @@ export default function ProductCard({
   const wishlistItems = useSelector(selectWishlistItems);
   const productId = product?._id || product?.id;
   const isInWishlist = productId && wishlistItems.some((p) => (p._id || p.id) === productId);
-  const isSoldOut = quantity === 0;
+  const isSoldOut = quantity < 1;
 
   const handleWishlistPress = (e) => {
     e?.stopPropagation?.();
@@ -53,48 +53,52 @@ export default function ProductCard({
 
   const cardContent = (
     <>
-      <View style={styles.sellerRow}>
-        <Image source={{ uri: sellerAvatar }} style={styles.avatar} />
-        <View style={styles.sellerText}>
-          <Text style={[styles.sellerName, { color: theme.text }]} numberOfLines={1}>
-            {sellerName}
+      <View style={styles.cardContent}>
+        <View style={styles.sellerRow}>
+          <Image source={{ uri: sellerAvatar }} style={styles.avatar} />
+          <View style={styles.sellerText}>
+            <Text style={[styles.sellerName, { color: theme.text }]} numberOfLines={1}>
+              {sellerName}
+            </Text>
+            <Text style={[styles.sellerType, { color: theme.textSecondary }]}>
+              {sellerType}
+            </Text>
+          </View>
+        </View>
+        <View style={styles.imgWrap}>
+          <Image source={{ uri: image }} style={styles.productImage} />
+        </View>
+        <View style={styles.titleRow}>
+          <Text style={[styles.title, { color: theme.text }]} numberOfLines={2}>
+            {title}
           </Text>
-          <Text style={[styles.sellerType, { color: theme.textSecondary }]}>
-            {sellerType}
-          </Text>
+          {isSoldOut && (
+            <View style={styles.soldBadgeTitle}>
+              <Text style={styles.soldBadgeText}>SOLD</Text>
+            </View>
+          )}
+        </View>
+        <Text style={[styles.location, { color: theme.textSecondary }]} numberOfLines={1}>
+          {location}
+        </Text>
+        <View style={styles.footer}>
+          <Text style={[styles.price, { color: theme.text }]}>{formatPrice(price)}</Text>
+          <TouchableOpacity 
+            onPress={(e) => { e?.stopPropagation?.(); }}
+            disabled={isSoldOut}
+            style={isSoldOut && styles.cartButtonDisabled}
+          >
+            <Ionicons 
+              name="cart-outline" 
+              size={22} 
+              color={isSoldOut ? '#ccc' : theme.primary} 
+            />
+          </TouchableOpacity>
         </View>
       </View>
-      <View style={styles.imgWrap}>
-        <Image source={{ uri: image }} style={styles.productImage} />
-        <TouchableOpacity style={styles.heartWrap} onPress={handleWishlistPress}>
-          <Ionicons name={isInWishlist ? 'heart' : 'heart-outline'} size={20} color="#c62828" />
-        </TouchableOpacity>
-        {isSoldOut && (
-          <View style={styles.soldBadge}>
-            <Text style={styles.soldBadgeText}>SOLD</Text>
-          </View>
-        )}
-      </View>
-      <Text style={[styles.title, { color: theme.text }]} numberOfLines={2}>
-        {title}
-      </Text>
-      <Text style={[styles.location, { color: theme.textSecondary }]} numberOfLines={1}>
-        {location}
-      </Text>
-      <View style={styles.footer}>
-        <Text style={[styles.price, { color: theme.text }]}>{formatPrice(price)}</Text>
-        <TouchableOpacity 
-          onPress={(e) => { e?.stopPropagation?.(); }}
-          disabled={isSoldOut}
-          style={isSoldOut && styles.cartButtonDisabled}
-        >
-          <Ionicons 
-            name="cart-outline" 
-            size={22} 
-            color={isSoldOut ? '#ccc' : theme.primary} 
-          />
-        </TouchableOpacity>
-      </View>
+      <TouchableOpacity style={styles.heartWrapTop} onPress={handleWishlistPress}>
+        <Ionicons name={isInWishlist ? 'heart' : 'heart-outline'} size={18} color="#c62828" />
+      </TouchableOpacity>
     </>
   );
 
@@ -124,9 +128,13 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderWidth: 1,
     shadowOffset: { width: 0, height: 0 },
+    position: 'relative',
     // shadowOpacity: 0.06,
     // shadowRadius: 4,
     // elevation: 2,
+  },
+  cardContent: {
+    // No specific styles needed, just for wrapping
   },
   sellerRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
   avatar: { width: 24, height: 24, borderRadius: 12, marginRight: 6 },
@@ -146,6 +154,17 @@ const styles = StyleSheet.create({
     right: 6,
     padding: 4,
   },
+  heartWrapSeller: {
+    padding: 2,
+    marginLeft: 4,
+  },
+  heartWrapTop: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    padding: 4,
+    zIndex: 1,
+  },
   soldBadge: {
     position: 'absolute',
     top: 6,
@@ -155,12 +174,21 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 4,
   },
+  soldBadgeTitle: {
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    marginRight: 6,
+    alignSelf: 'flex-start',
+  },
   soldBadgeText: {
     color: '#fff',
     fontSize: 10,
     fontWeight: '700',
   },
-  title: { fontSize: 13, fontWeight: '500', marginBottom: 2 },
+  titleRow: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 2 },
+  title: { fontSize: 13, fontWeight: '500', flex: 1 },
   location: { fontSize: 11, marginBottom: 6 },
   footer: {
     flexDirection: 'row',

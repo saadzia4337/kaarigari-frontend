@@ -197,13 +197,13 @@ export default function AIChatScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
-      <View style={[styles.header, { borderBottomColor: theme.border }]}>
-        <View style={[styles.botBadge, { backgroundColor: theme.primary.trim() }]}>
-          <Ionicons name="sparkles" size={20} color="#fff" />
+    <SafeAreaView style={[styles.container, { backgroundColor: '#fff' }]} edges={['top']}>
+      <View style={[styles.header, { backgroundColor: theme.primary?.trim?.() || theme.primary, borderBottomColor: theme.border }]}>
+        <View style={[styles.botBadge, { backgroundColor: '#D4AF37' }]}>
+          <Ionicons name="sparkles" size={20} color="#000" />
         </View>
-        <Text style={[styles.headerTitle, { color: theme.text }]}>AI Assistant</Text>
-        <Text style={[styles.headerSub, { color: theme.textSecondary }]}>Ask about tailors & orders</Text>
+        <Text style={[styles.headerTitle, { color: '#fff' }]}>AI Assistant</Text>
+        <Text style={[styles.headerSub, { color: '#fff' }]}>Ask about tailors & orders</Text>
       </View>
       <KeyboardAvoidingView
         style={styles.flex}

@@ -6,6 +6,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useSelector } from 'react-redux';
 import { useTheme } from '../theme/ThemeContext';
@@ -32,41 +33,43 @@ export default function Header({ navigation }) {
 
   const Badge = ({ count }) => {
     return count > 0 ? (
-      <View style={[styles.badge, { backgroundColor: primaryBg(theme) }]}>
+      <View style={[styles.badge, { backgroundColor: '#D4AF37' }]}>
         <Text style={styles.badgeText}>{count > 99 ? '99+' : count}</Text>
       </View>
     ) : null;
   };
 
   return (
-    <View
-      style={[
-        styles.header,
-        {
-          paddingTop: insets.top + 8,
-          paddingBottom: 12,
-          backgroundColor: theme.background,
-          borderBottomColor: theme.border,
-        },
-      ]}
-    >
+    <SafeAreaView style={{ backgroundColor: primaryBg(theme) }} edges={['top']}>
+      <View
+        style={[
+          styles.header,
+          {
+            paddingTop: 8,
+            paddingBottom: 12,
+            backgroundColor: primaryBg(theme),
+            borderBottomColor: theme.border,
+          },
+        ]}
+      >
       
       <TouchableOpacity style={styles.iconBtn} onPress={goToWishlist}>
-        <Ionicons name="heart-outline" size={24} color={theme.primary} />
+        <Ionicons name="heart-outline" size={24} color="#fff" />
         <Badge count={favCount} />
       </TouchableOpacity>
-      <Text style={[styles.logo, { color: theme.text }]}>Kaarigari</Text>
+      <Text style={[styles.logo, { color: '#fff' }]}>Kaarigari</Text>
       <View style={styles.rightIcons}>
         <TouchableOpacity style={styles.iconBtn} onPress={goToAlerts}>
-          <Ionicons name="notifications-outline" size={24} color={theme.primary} />
+          <Ionicons name="notifications-outline" size={24} color="#fff" />
           <Badge count={calculatedUnreadCount} />
         </TouchableOpacity>
         <TouchableOpacity style={styles.iconBtn} onPress={goToCart}>
-          <Ionicons name="cart-outline" size={24} color={theme.primary} />
+          <Ionicons name="cart-outline" size={24} color="#fff" />
           <Badge count={cartCount} />
         </TouchableOpacity>
       </View>
-    </View>
+      </View>
+      </SafeAreaView>
   );
 }
 
@@ -79,7 +82,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
   },
   iconBtn: { padding: 4, minWidth: 40, alignItems: 'center', justifyContent: 'center', position: 'relative' },
-  logo: { fontSize: 20, fontWeight: '700' },
+  logo: { fontSize: 20, fontWeight: '700', marginLeft:26 },
   rightIcons: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -95,5 +98,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 4,
   },
-  badgeText: { color: '#fff', fontSize: 11, fontWeight: '700' },
+  badgeText: { color: '#000', fontSize: 11, fontWeight: '700' },
 });

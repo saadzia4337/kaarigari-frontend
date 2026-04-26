@@ -4,6 +4,7 @@ import {
   getProductById as getProductByIdApi,
   createProduct as createProductApi,
   updateProduct as updateProductApi,
+  deleteProduct as deleteProductApi,
 } from '../../services/productService';
 
 export const fetchProducts = createAsyncThunk(
@@ -61,6 +62,22 @@ export const updateProductAsync = createAsyncThunk(
     } catch (err) {
       return rejectWithValue(
         err.userMessage || err.message || 'Failed to update product'
+      );
+    }
+  }
+);
+
+export const deleteProductAsync = createAsyncThunk(
+  'products/delete',
+  async (productId, { getState, rejectWithValue }) => {
+    const token = getState().auth.token;
+    if (!token) return rejectWithValue('Not authenticated');
+    try {
+      await deleteProductApi(productId, token);
+      return productId;
+    } catch (err) {
+      return rejectWithValue(
+        err.userMessage || err.message || 'Failed to delete product'
       );
     }
   }
@@ -145,6 +162,21 @@ const productsSlice = createSlice({
       .addCase(updateProductAsync.rejected, (state, action) => {
         state.createLoading = false;
         state.error = action.payload ?? 'Failed to update product';
+      })
+      // deleteProductAsync
+      .addCase(deleteProductAsync.pending, (state) => {
+        state.createLoading = true;
+        state.error = null;
+      })
+      .addCase(deleteProductAsync.fulfilled, (state, action) => {
+        state.createLoading = false;
+        // Remove product from list
+        state.list = state.list.filter(product => product._id !== action.payload);
+        state.error = null;
+      })
+      .addCase(deleteProductAsync.rejected, (state, action) => {
+        state.createLoading = false;
+        state.error = action.payload ?? 'Failed to delete product';
       });
   },
 });

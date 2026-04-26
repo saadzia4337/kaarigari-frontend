@@ -16,25 +16,25 @@ const getToastColors = (type, theme) => {
   switch (type) {
     case 'success':
       return {
-        background: '#34C759',
-        border: '#30D158',
-        text: '#fff',
+        background: '#fff',
+        border: '#34C759',
+        text: '#34C759',
       };
     case 'error':
       return {
-        background: '#FF3B30',
-        border: '#FF453A',
-        text: '#fff',
+        background: '#fff',
+        border: '#FF3B30',
+        text: '#FF3B30',
       };
     case 'warning':
       return {
-        background: '#FF9500',
-        border: '#FF9F0A',
-        text: '#fff',
+        background: '#fff',
+        border: '#FF9500',
+        text: '#FF9500',
       };
     default:
       return {
-        background: theme.backgroundSecondary || '#2a2a2a',
+        background: '#fff',
         border: theme.border,
         text: theme.text,
       };

@@ -6,7 +6,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Image, StyleSheet } from 'react-native';
 
-const splashImage = require('../assets/images/splash.png');
+const splashImage = require('../assets/images/splash-new.png');
 
 const SPLASH_DURATION_MS = 2500;
 

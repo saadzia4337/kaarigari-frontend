@@ -45,12 +45,18 @@ function ChatItem({ item, theme, navigation, currentUser }) {
         seller: { 
           id: item.seller.id, 
           name: item.seller.name, 
-          image: item.seller.avatar 
+          avatar: item.seller.avatar 
         } 
       })}
     >
       {item.seller.avatar ? (
-        <Image source={{ uri: item.seller.avatar }} style={styles.avatar} />
+        <Image 
+          source={{ uri: item.seller.avatar }} 
+          style={styles.avatar}
+          onError={() => {
+            // Handle image loading error - could set state to show fallback
+          }}
+        />
       ) : (
         <View style={[styles.avatar, styles.avatarPlaceholder]}>
           <Text style={[styles.avatarText, { color: '#fff' }]}>
@@ -168,10 +174,10 @@ export default function MessageScreen({ navigation, route }) {
 
   if (loading) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: theme.backgroundSecondary }]} edges={['top']}>
-        <View style={[styles.header, { backgroundColor: theme.background, borderBottomColor: theme.border }]}>
-          <Text style={[styles.headerTitle, { color: theme.text }]}>Messages</Text>
-          <Text style={[styles.headerSub, { color: theme.textSecondary }]}>Chats with sellers</Text>
+      <SafeAreaView style={[styles.container, { backgroundColor: '#fff' }]} edges={['top']}>
+        <View style={[styles.header, { backgroundColor: theme.primary?.trim?.() || theme.primary, borderBottomColor: theme.border }]}>
+          <Text style={[styles.headerTitle, { color: '#fff' }]}>Messages</Text>
+          <Text style={[styles.headerSub, { color: '#fff' }]}>Chats with sellers</Text>
         </View>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={theme.primary.trim()} />
@@ -182,22 +188,22 @@ export default function MessageScreen({ navigation, route }) {
 
   return (
     <SafeAreaView
-      style={[styles.container, { backgroundColor: theme.backgroundSecondary }]}
+      style={[styles.container, { backgroundColor: '#fff' }]}
       edges={['top']}
     >
       <View
         style={[
           styles.header,
           {
-            backgroundColor: theme.background,
+            backgroundColor: theme.primary?.trim?.() || theme.primary,
             borderBottomColor: theme.border,
           },
         ]}
       >
-        <Text style={[styles.headerTitle, { color: theme.text }]}>
+        <Text style={[styles.headerTitle, { color: '#fff' }]}>
           {specificSeller ? specificSeller.name : 'Messages'}
         </Text>
-        <Text style={[styles.headerSub, { color: theme.textSecondary }]}>
+        <Text style={[styles.headerSub, { color: '#fff' }]}>
           {specificSeller ? 'Chat with this seller' : 'Chats with sellers'}
         </Text>
       </View>

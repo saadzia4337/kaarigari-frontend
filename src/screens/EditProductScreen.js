@@ -20,7 +20,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useDispatch, useSelector } from 'react-redux';
 import { useTheme } from '../theme/ThemeContext';
-import { selectAllProducts, updateProductAsync } from '../store/slices/productsSlice';
+import { selectAllProducts, updateProductAsync, deleteProductAsync } from '../store/slices/productsSlice';
 import { selectCategories, fetchCategories } from '../store/slices/categoriesSlice';
 import { showToast } from '../store/slices/toastSlice';
 import { launchImageLibrary } from 'react-native-image-picker';
@@ -120,6 +120,32 @@ const EditProductScreen = ({ navigation }) => {
     setShowCategoryDropdown(false);
   };
 
+  const handleDeleteProduct = (product) => {
+    Alert.alert(
+      'Delete Product',
+      `Are you sure you want to delete "${product.title || product.name}"? This action cannot be undone.`,
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await dispatch(deleteProductAsync(product._id)).unwrap();
+              dispatch(showToast('Product deleted successfully!'));
+            } catch (error) {
+              console.log('Delete product error:', error);
+              Alert.alert('Error', `Failed to delete product: ${error.message || 'Unknown error'}`);
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const handleUpdateProduct = async () => {
     if (!editForm.name.trim() || !editForm.price || !editForm.category) {
       Alert.alert('Error', 'Please fill in all required fields');
@@ -186,12 +212,20 @@ const EditProductScreen = ({ navigation }) => {
           {product.category?.title || product.category?.name || 'Uncategorized'}
         </Text>
       </View>
-      <TouchableOpacity
-        style={[styles.editButton, { backgroundColor: theme.primary }]}
-        onPress={() => handleEditProduct(product)}
-      >
-        <Ionicons name="create-outline" size={20} color="#fff" />
-      </TouchableOpacity>
+      <View style={styles.productActions}>
+        <TouchableOpacity
+          style={[styles.editButton, { backgroundColor: theme.primary }]}
+          onPress={() => handleEditProduct(product)}
+        >
+          <Ionicons name="create-outline" size={20} color="#fff" />
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.deleteButton, { backgroundColor: '#ff4444' }]}
+          onPress={() => handleDeleteProduct(product)}
+        >
+          <Ionicons name="trash-outline" size={20} color="#fff" />
+        </TouchableOpacity>
+      </View>
     </View>
   );
 
@@ -493,6 +527,14 @@ const styles = StyleSheet.create({
   editButton: {
     padding: 8,
     borderRadius: 8,
+    marginRight: 8,
+  },
+  deleteButton: {
+    padding: 8,
+    borderRadius: 8,
+  },
+  productActions: {
+    flexDirection: 'row',
   },
   emptyState: {
     alignItems: 'center',

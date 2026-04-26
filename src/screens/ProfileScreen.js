@@ -60,8 +60,9 @@ export default function ProfileScreen({ navigation }) {
       seller: {
         id: user._id,
         name: user?.shopName || `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'Seller',
-        image: profilePicUriForSeller || 'https://picsum.photos/seed/seller/120/120',
+        avatar: profilePicUriForSeller || 'https://picsum.photos/seed/seller/120/120',
       },
+      sellerId: user._id,
     });
   };
 
@@ -98,62 +99,66 @@ export default function ProfileScreen({ navigation }) {
         <Text style={[styles.headerTitle, { color: theme.text }]} numberOfLines={1}>
           {user.firstName} {user.lastName}
         </Text>
-        <TouchableOpacity onPress={goToEdit} style={styles.editBtn}>
-          <Ionicons name="pencil" size={22} color={theme.primary?.trim() || theme.text} />
-          <Text style={[styles.editBtnText, { color: theme.primary?.trim() || theme.text }]}>Edit</Text>
-        </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* My profile - only for sellers, navigates to SellerProfile */}
-        {isSeller && (
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={goToSellerProfile}
-            style={[styles.profileCard, { backgroundColor: theme.backgroundSecondary, borderColor: theme.border }]}
-          >
-            <View style={styles.profileRow}>
-              {profilePicUri ? (
-                <Image source={{ uri: profilePicUri }} style={styles.avatarImg} />
-              ) : (
-                <View style={[styles.avatarWrap, { backgroundColor: theme.backgroundSecondary, borderColor: theme.border }]}>
-                  <Text style={[styles.avatarText, { color: theme.text }]}>
-                    {(user.firstName?.[0] || '') + (user.lastName?.[0] || '') || 'U'}
-                  </Text>
-                </View>
-              )}
-              <View style={styles.profileInfo}>
-                <Text style={[styles.name, { color: theme.text }]}>
-                  {user.firstName} {user.lastName}
+        {/* My profile section for all users */}
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onPress={isSeller ? goToSellerProfile : goToEdit}
+          style={[styles.profileCard, { backgroundColor: theme.backgroundSecondary, borderColor: theme.border }]}
+        >
+          <View style={styles.profileRow}>
+            {profilePicUri ? (
+              <Image source={{ uri: profilePicUri }} style={styles.avatarImg} />
+            ) : (
+              <View style={[styles.avatarWrap, { backgroundColor: theme.backgroundSecondary, borderColor: theme.border }]}>
+                <Text style={[styles.avatarText, { color: theme.text }]}>
+                  {(user.firstName?.[0] || '') + (user.lastName?.[0] || '') || 'U'}
                 </Text>
-                <Text style={[styles.email, { color: theme.textSecondary }]}>{user.email}</Text>
-                <View style={styles.roleContainer}>
-                  <Text style={[
-                    styles.roleBadge, 
-                    { 
-                      color: '#388e3c',
-                      borderColor: '#388e3c',
-                      backgroundColor: theme.background
-                    }
-                  ]}>
-                    Seller
-                  </Text>
-                </View>
-                {user.shopName && (
-                  <Text style={[styles.bio, { color: theme.textSecondary }]}>
-                    🏪 {user.shopName}
-                  </Text>
-                )}
-                {user.bio && (
-                  <Text style={[styles.bio, { color: theme.textSecondary }]} numberOfLines={2}>
-                    {user.bio}
-                  </Text>
-                )}
               </View>
+            )}
+            <View style={styles.profileInfo}>
+              <Text style={[styles.name, { color: theme.text }]}>
+                {user.firstName} {user.lastName}
+              </Text>
+              <Text style={[styles.email, { color: theme.textSecondary }]}>{user.email}</Text>
+              <View style={styles.roleContainer}>
+                <Text style={[
+                  styles.roleBadge, 
+                  { 
+                    color: isSeller ? '#388e3c' : isAdmin ? '#d32f2f' : '#1976d2',
+                    borderColor: isSeller ? '#388e3c' : isAdmin ? '#d32f2f' : '#1976d2',
+                    backgroundColor: theme.background
+                  }
+                ]}>
+                  {isAdmin ? 'Admin' : isSeller ? 'Seller' : 'Buyer'}
+                </Text>
+              </View>
+              {user.shopName && (
+                <Text style={[styles.bio, { color: theme.textSecondary }]}>
+                  🏪 {user.shopName}
+                </Text>
+              )}
+              {user.bio && (
+                <Text style={[styles.bio, { color: theme.textSecondary }]} numberOfLines={2}>
+                  {user.bio}
+                </Text>
+              )}
+              {user.phone && (
+                <Text style={[styles.bio, { color: theme.textSecondary }]}>
+                  📱 {user.phone}
+                </Text>
+              )}
+              {user.city && (
+                <Text style={[styles.bio, { color: theme.textSecondary }]}>
+                  📍 {user.city}
+                </Text>
+              )}
             </View>
-            <Ionicons name="chevron-forward" size={20} color={theme.muted} style={styles.cardChevron} />
-          </TouchableOpacity>
-        )}
+          </View>
+          <Ionicons name="chevron-forward" size={20} color={theme.muted} style={styles.cardChevron} />
+        </TouchableOpacity>
 
         <View style={[styles.section, { borderTopColor: theme.border }]}>
           <Text style={[styles.sectionTitle, { color: theme.text }]}>Menu</Text>

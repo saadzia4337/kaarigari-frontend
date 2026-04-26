@@ -22,14 +22,14 @@ import ProfileScreen from '../screens/ProfileScreen';
 const Tab = createBottomTabNavigator();
 
 // Badge component for tab icons (moved outside to avoid hook ordering issues)
-const TabBadge = ({ count, theme }) => {
+const TabBadge = ({ count, theme, focused }) => {
   if (count <= 0) return null;
   return (
     <View style={{
       position: 'absolute',
       top: -6,
       right: -6,
-      backgroundColor: theme.primary?.trim?.() || theme.primary,
+      backgroundColor: focused ? '#fff' : '#D4AF37',
       borderRadius: 10,
       minWidth: 20,
       height: 20,
@@ -39,7 +39,7 @@ const TabBadge = ({ count, theme }) => {
       zIndex: 1,
     }}>
       <Text style={{
-        color: '#fff',
+        color: theme.primary?.trim?.() || theme.primary,
         fontSize: 11,
         fontWeight: '600',
       }}>
@@ -92,10 +92,10 @@ export default function TabNavigator() {
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: theme.primary?.trim?.() || theme.primary,
-        tabBarInactiveTintColor: theme.muted,
+        tabBarActiveTintColor: '#D4AF37', // Yellow for active tabs
+        tabBarInactiveTintColor: '#fff',
         tabBarStyle: {
-          backgroundColor: theme.card,
+          backgroundColor: theme.primary?.trim?.() || theme.primary,
           borderTopColor: theme.border,
           paddingBottom: Math.max(insets.bottom, 8),
           height: 56 + Math.max(insets.bottom, 8),
@@ -129,7 +129,7 @@ export default function TabNavigator() {
                 size={size ?? 24}
                 color={color}
               />
-              <TabBadge count={unreadChatCount} theme={theme} />
+              <TabBadge count={unreadChatCount} theme={theme} focused={focused} />
             </View>
           ),
         }}

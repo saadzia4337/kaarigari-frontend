@@ -11,6 +11,7 @@ import {
   ScrollView,
   FlatList,
   ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { useTheme } from '../theme/ThemeContext';
@@ -30,6 +31,9 @@ import CategoryCard from '../components/CategoryCard';
 import SecondaryBanner from '../components/SecondaryBanner';
 import TailorCard from '../components/TailorCard';
 import ProductCard from '../components/ProductCard';
+import SkeletonCategory from '../components/SkeletonCategory';
+import SkeletonTailor from '../components/SkeletonTailor';
+import SkeletonCard from '../components/SkeletonCard';
 import { getBestSellers, getSellerImageUri } from '../services/sellersService';
 
 export default function HomeScreen({ navigation }) {
@@ -45,6 +49,7 @@ export default function HomeScreen({ navigation }) {
   const [bestSellersLoading, setBestSellersLoading] = useState(true);
   const [bestSellerProducts, setBestSellerProducts] = useState([]);
   const [bestSellerProductsLoading, setBestSellerProductsLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     dispatch(fetchPrimaryBanner());
@@ -105,6 +110,37 @@ export default function HomeScreen({ navigation }) {
     navigation.navigate('Products', { selectedCategory: categoryId });
   };
 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    
+    try {
+      // Refresh all data
+      await Promise.all([
+        dispatch(fetchPrimaryBanner()).unwrap(),
+        dispatch(fetchSecondaryBanner()).unwrap(),
+        dispatch(fetchCategories()).unwrap(),
+        dispatch(fetchProducts({ bestSeller: true })).unwrap(),
+      ]);
+      
+      // Refresh best sellers
+      const sellersData = await getBestSellers();
+      setBestSellers(Array.isArray(sellersData) ? sellersData : []);
+      
+      // Refresh hello message
+      const helloData = await getHello();
+      setHelloMessage(helloData.message);
+      setHelloError(null);
+      
+    } catch (error) {
+      console.log('Refresh error:', error);
+      if (error.message) {
+        setHelloError(error.message);
+      }
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       <Header navigation={navigation} />
@@ -119,6 +155,14 @@ export default function HomeScreen({ navigation }) {
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={theme.primary}
+            colors={[theme.primary]}
+          />
+        }
       >
         <PrimaryBanner slides={primarySlides} />
 
@@ -127,18 +171,23 @@ export default function HomeScreen({ navigation }) {
             Categories
           </Text>
           <FlatList
-            data={categories}
+            data={categories.length > 0 ? categories : Array(6).fill({})}
             horizontal
             showsHorizontalScrollIndicator={false}
-            keyExtractor={(item) => item._id || item.id || String(item.title)}
-            renderItem={({ item }) => (
-              <CategoryCard 
-                name={item.title || item.name} 
-                image={imageUrl(item.image) || item.image}
-                categoryId={item._id}
-                onPress={handleCategoryPress}
-              />
-            )}
+            keyExtractor={(item, index) => item._id || item.id || `skeleton-${index}`}
+            renderItem={({ item, index }) => {
+              if (item._id || item.id) {
+                return (
+                  <CategoryCard 
+                    name={item.title || item.name} 
+                    image={imageUrl(item.image) || item.image}
+                    categoryId={item._id}
+                    onPress={handleCategoryPress}
+                  />
+                );
+              }
+              return <SkeletonCategory />;
+            }}
             contentContainerStyle={styles.categoriesList}
           />
         </View>
@@ -149,17 +198,13 @@ export default function HomeScreen({ navigation }) {
           <Text style={[styles.sectionTitle, { color: theme.text }]}>
             Best Sellers
           </Text>
-          {bestSellersLoading && bestSellers.length === 0 ? (
-            <View style={styles.tailorsLoading}>
-              <ActivityIndicator size="small" color={theme.primary?.trim() || '#6366f1'} />
-            </View>
-          ) : (
-            <FlatList
-              data={bestSellers}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              keyExtractor={(item) => item._id}
-              renderItem={({ item }) => {
+          <FlatList
+            data={bestSellers.length > 0 ? bestSellers : Array(6).fill({})}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            keyExtractor={(item, index) => item._id || `skeleton-${index}`}
+            renderItem={({ item, index }) => {
+              if (item._id) {
                 const name = item.shopName || [item.firstName, item.lastName].filter(Boolean).join(' ') || 'Seller';
                 const sellerPayload = {
                   id: item._id,
@@ -174,51 +219,61 @@ export default function HomeScreen({ navigation }) {
                     onPress={() => navigation.navigate('SellerProfile', { seller: sellerPayload, sellerId: item._id })}
                   />
                 );
-              }}
-              contentContainerStyle={styles.tailorsList}
-              ListEmptyComponent={
-                !bestSellersLoading ? (
-                  <Text style={[styles.emptySellers, { color: theme.textSecondary }]}>No best sellers yet</Text>
-                ) : null
               }
-            />
-          )}
+              return <SkeletonTailor />;
+            }}
+            contentContainerStyle={styles.tailorsList}
+            ListEmptyComponent={
+              !bestSellersLoading ? (
+                <Text style={[styles.emptySellers, { color: theme.textSecondary }]}>No best sellers yet</Text>
+              ) : null
+            }
+          />
         </View>
 
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: theme.text }]}>
             Best Seller Products
           </Text>
-          {bestSellerProductsLoading && bestSellerProducts.length === 0 ? (
-            <View style={styles.productsLoading}>
-              <ActivityIndicator size="small" color={theme.primary?.trim() || '#6366f1'} />
-            </View>
-          ) : (
             <View style={styles.productsGrid}>
-              {bestSellerProducts.map((item, index) => (
-                <View
-                  key={item._id || item.id}
-                  style={[
-                    styles.productCardWrap,
-                    index % 2 === 0 ? styles.productCardLeft : styles.productCardRight,
-                  ]}
-                >
-                  <ProductCard
-                    product={item}
-                    onPress={(p) => navigation.navigate('ProductDetail', { product: p })}
-                    sellerName={item.sellerName}
-                    sellerType={item.sellerType}
-                    sellerAvatar={item.sellerAvatar}
-                    image={item.image}
-                    title={item.title}
-                    location={item.location}
-                    price={item.price}
-                    quantity={item.quantity}
-                  />
-                </View>
-              ))}
+              {(bestSellerProducts.length > 0 ? bestSellerProducts : Array(6).fill({})).map((item, index) => {
+                if (item._id || item.id) {
+                  return (
+                    <View
+                      key={item._id || item.id}
+                      style={[
+                        styles.productCardWrap,
+                        index % 2 === 0 ? styles.productCardLeft : styles.productCardRight,
+                      ]}
+                    >
+                      <ProductCard
+                        product={item}
+                        onPress={(p) => navigation.navigate('ProductDetail', { product: p })}
+                        sellerName={item.sellerName}
+                        sellerType={item.sellerType}
+                        sellerAvatar={item.sellerAvatar}
+                        image={item.image}
+                        title={item.title}
+                        location={item.location}
+                        price={item.price}
+                        quantity={item.quantity}
+                      />
+                    </View>
+                  );
+                }
+                return (
+                  <View
+                    key={`skeleton-${index}`}
+                    style={[
+                      styles.productCardWrap,
+                      index % 2 === 0 ? styles.productCardLeft : styles.productCardRight,
+                    ]}
+                  >
+                    <SkeletonCard />
+                  </View>
+                );
+              })}
             </View>
-          )}
           {!bestSellerProductsLoading && bestSellerProducts.length === 0 ? (
             <Text style={[styles.emptyText, { color: theme.textSecondary }]}>No best seller products yet</Text>
           ) : null}

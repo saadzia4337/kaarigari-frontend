@@ -36,6 +36,10 @@ import {
 export default function SellerMessageScreen({ navigation, route }) {
   const theme = useTheme();
   const seller = route?.params?.seller || { name: 'Seller', id: null };
+  // Ensure seller has avatar field (handle both avatar and image field names)
+  if (seller.image && !seller.avatar) {
+    seller.avatar = seller.image;
+  }
   const token = useSelector((state) => state.auth.token);
   const currentUser = useSelector((state) => state.auth.user);
   
