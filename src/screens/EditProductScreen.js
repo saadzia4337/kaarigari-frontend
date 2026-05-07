@@ -38,7 +38,9 @@ const EditProductScreen = ({ navigation }) => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [showEditForm, setShowEditForm] = useState(false);
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
-  
+  const [tryOnOverlayNew, setTryOnOverlayNew] = useState(null);
+  const [tryOnOverlayRemoved, setTryOnOverlayRemoved] = useState(false);
+
   // Edit form state
   const [editForm, setEditForm] = useState({
     name: '',
@@ -76,6 +78,8 @@ const EditProductScreen = ({ navigation }) => {
     console.log('EditProductScreen: Product category type:', typeof product.category);
     
     setSelectedProduct(product);
+    setTryOnOverlayNew(null);
+    setTryOnOverlayRemoved(false);
     setEditForm({
       name: product.title || product.name || '',
       price: product.price?.toString() || '',
@@ -85,6 +89,32 @@ const EditProductScreen = ({ navigation }) => {
       quantity: product.quantity?.toString() || product.stock?.toString() || '',
     });
     setShowEditForm(true);
+  };
+
+  const pickTryOnOverlay = () => {
+    launchImageLibrary(
+      { mediaType: 'photo', includeBase64: false, selectionLimit: 1 },
+      (res) => {
+        if (res.didCancel || !res.assets?.length) return;
+        const a = res.assets[0];
+        setTryOnOverlayNew({
+          uri: a.uri,
+          name: a.fileName || `tryon_${Date.now()}.png`,
+          type: a.type || 'image/png',
+        });
+        setTryOnOverlayRemoved(false);
+      }
+    );
+  };
+
+  const clearTryOnOverlay = () => {
+    if (tryOnOverlayNew) {
+      setTryOnOverlayNew(null);
+      return;
+    }
+    if (selectedProduct?.tryOnOverlay) {
+      setTryOnOverlayRemoved(true);
+    }
   };
 
   const handleImagePick = () => {
@@ -165,14 +195,33 @@ const EditProductScreen = ({ navigation }) => {
         description: editForm.description.trim(),
         category: editForm.category,
         images: editForm.images,
-        quantity: parseInt(editForm.quantity) || 0,
+        quantity: parseInt(editForm.quantity, 10) || 0,
       };
 
-      console.log('EditProductScreen: Product data to send:', productData);
+      let payload = productData;
+      if (tryOnOverlayNew) {
+        const fd = new FormData();
+        fd.append('name', productData.name);
+        fd.append('title', productData.title);
+        fd.append('description', productData.description);
+        fd.append('category', String(productData.category || ''));
+        fd.append('quantity', String(productData.quantity));
+        fd.append('price', String(productData.price));
+        fd.append('tryOnOverlay', {
+          uri: tryOnOverlayNew.uri,
+          name: tryOnOverlayNew.name || 'tryon.png',
+          type: tryOnOverlayNew.type || 'image/png',
+        });
+        payload = fd;
+      } else if (tryOnOverlayRemoved && selectedProduct.tryOnOverlay) {
+        payload = { ...productData, removeTryOnOverlay: 'true' };
+      }
 
-      const result = await dispatch(updateProductAsync({ 
-        productId: selectedProduct._id, 
-        productData 
+      console.log('EditProductScreen: Product data to send:', tryOnOverlayNew ? '[FormData]' : payload);
+
+      const result = await dispatch(updateProductAsync({
+        productId: selectedProduct._id,
+        productData: payload,
       })).unwrap();
       
       console.log('EditProductScreen: Update result:', result);
@@ -182,6 +231,8 @@ const EditProductScreen = ({ navigation }) => {
       setSelectedProduct(null);
       
       // Reset form
+      setTryOnOverlayNew(null);
+      setTryOnOverlayRemoved(false);
       setEditForm({
         name: '',
         price: '',
@@ -362,6 +413,43 @@ const EditProductScreen = ({ navigation }) => {
                 Add Image
               </Text>
             </TouchableOpacity>
+          </View>
+        </View>
+
+        <View style={styles.inputGroup}>
+          <Text style={[styles.label, { color: theme.text }]}>
+            Try-on overlay (optional PNG with transparency)
+          </Text>
+          <View style={styles.tryOnRow}>
+            {tryOnOverlayNew ? (
+              <View style={[styles.tryOnThumbWrap, { borderColor: theme.border }]}>
+                <Image source={{ uri: tryOnOverlayNew.uri }} style={styles.tryOnThumb} />
+                <TouchableOpacity style={styles.removeTryOnThumb} onPress={clearTryOnOverlay}>
+                  <Ionicons name="close-circle" size={24} color="#ff4444" />
+                </TouchableOpacity>
+              </View>
+            ) : tryOnOverlayRemoved ? (
+              <TouchableOpacity
+                onPress={pickTryOnOverlay}
+                style={[styles.tryOnAddBtn, { backgroundColor: theme.background, borderColor: theme.border }]}
+              >
+                <Ionicons name="shirt-outline" size={28} color={theme.textSecondary} />
+              </TouchableOpacity>
+            ) : selectedProduct?.tryOnOverlay ? (
+              <View style={[styles.tryOnThumbWrap, { borderColor: theme.border }]}>
+                <Image source={{ uri: selectedProduct.tryOnOverlay }} style={styles.tryOnThumb} />
+                <TouchableOpacity style={styles.removeTryOnThumb} onPress={clearTryOnOverlay}>
+                  <Ionicons name="close-circle" size={24} color="#ff4444" />
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <TouchableOpacity
+                onPress={pickTryOnOverlay}
+                style={[styles.tryOnAddBtn, { backgroundColor: theme.background, borderColor: theme.border }]}
+              >
+                <Ionicons name="shirt-outline" size={28} color={theme.textSecondary} />
+              </TouchableOpacity>
+            )}
           </View>
         </View>
       </ScrollView>
@@ -711,6 +799,35 @@ const styles = StyleSheet.create({
   addImageText: {
     fontSize: 10,
     marginTop: 4,
+  },
+  tryOnRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  tryOnThumbWrap: {
+    position: 'relative',
+    width: 80,
+    height: 80,
+    borderRadius: 8,
+    borderWidth: 1,
+    overflow: 'hidden',
+  },
+  tryOnThumb: {
+    width: '100%',
+    height: '100%',
+  },
+  removeTryOnThumb: {
+    position: 'absolute',
+    top: 2,
+    right: 2,
+  },
+  tryOnAddBtn: {
+    width: 80,
+    height: 80,
+    borderRadius: 8,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   formActions: {
     flexDirection: 'row',

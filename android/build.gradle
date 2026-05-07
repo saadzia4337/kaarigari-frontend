@@ -21,3 +21,7 @@ buildscript {
 }
 
 apply plugin: "com.facebook.react.rootproject"
+
+ext {
+    VisionCamera_enableFrameProcessors = false
+}

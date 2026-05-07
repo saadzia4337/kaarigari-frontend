@@ -10,13 +10,24 @@ import {
 export const fetchProducts = createAsyncThunk(
   'products/fetchProducts',
   async (payload, { rejectWithValue }) => {
-    const sellerId = payload?.sellerId;
-    const bestSeller = payload?.bestSeller;
     try {
-      return await getProductsApi(sellerId, bestSeller);
+      return await getProductsApi(payload);
     } catch (err) {
       return rejectWithValue(
         err.userMessage || err.response?.data?.message || err.message || 'Failed to load products'
+      );
+    }
+  }
+);
+
+export const fetchSuggestedProducts = createAsyncThunk(
+  'products/fetchSuggestedProducts',
+  async ({ category, excludeId, limit = 10 }, { rejectWithValue }) => {
+    try {
+      return await getProductsApi({ category, bestSeller: true, excludeId, limit });
+    } catch (err) {
+      return rejectWithValue(
+        err.userMessage || err.response?.data?.message || err.message || 'Failed to load suggested products'
       );
     }
   }
@@ -41,8 +52,8 @@ export const createProductAsync = createAsyncThunk(
     const token = getState().auth.token;
     if (!token) return rejectWithValue('Not authenticated');
     try {
-      const response = await createProductApi(token, formData);
-      return response.data;
+      const created = await createProductApi(token, formData);
+      return created;
     } catch (err) {
       return rejectWithValue(
         err.userMessage || err.message || 'Failed to create product'
@@ -57,8 +68,7 @@ export const updateProductAsync = createAsyncThunk(
     const token = getState().auth.token;
     if (!token) return rejectWithValue('Not authenticated');
     try {
-      const response = await updateProductApi(productId, productData, token);
-      return response.data;
+      return await updateProductApi(productId, productData, token);
     } catch (err) {
       return rejectWithValue(
         err.userMessage || err.message || 'Failed to update product'
@@ -88,7 +98,9 @@ const productsSlice = createSlice({
   initialState: {
     list: [],
     currentProduct: null,
+    suggestedProducts: [],
     loading: false,
+    suggestedLoading: false,
     createLoading: false,
     error: null,
   },
@@ -98,6 +110,9 @@ const productsSlice = createSlice({
     },
     clearProductsError: (state) => {
       state.error = null;
+    },
+    clearSuggestedProducts: (state) => {
+      state.suggestedProducts = [];
     },
   },
   extraReducers: (builder) => {
@@ -177,16 +192,33 @@ const productsSlice = createSlice({
       .addCase(deleteProductAsync.rejected, (state, action) => {
         state.createLoading = false;
         state.error = action.payload ?? 'Failed to delete product';
+      })
+      // fetchSuggestedProducts
+      .addCase(fetchSuggestedProducts.pending, (state) => {
+        state.suggestedLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchSuggestedProducts.fulfilled, (state, action) => {
+        state.suggestedLoading = false;
+        state.suggestedProducts = action.payload || [];
+        state.error = null;
+      })
+      .addCase(fetchSuggestedProducts.rejected, (state, action) => {
+        state.suggestedLoading = false;
+        state.suggestedProducts = [];
+        state.error = action.payload ?? 'Failed to load suggested products';
       });
   },
 });
 
-export const { clearCurrentProduct, clearProductsError } = productsSlice.actions;
+export const { clearCurrentProduct, clearProductsError, clearSuggestedProducts } = productsSlice.actions;
 
 // Selectors
 export const selectAllProducts = (state) => state.products?.list || [];
 export const selectProductsLoading = (state) => state.products?.loading || false;
 export const selectProductsError = (state) => state.products?.error || null;
 export const selectCurrentProduct = (state) => state.products?.currentProduct || null;
+export const selectSuggestedProducts = (state) => state.products?.suggestedProducts || [];
+export const selectSuggestedProductsLoading = (state) => state.products?.suggestedLoading || false;
 
 export default productsSlice.reducer;

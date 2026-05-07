@@ -45,6 +45,7 @@ export default function AddProductScreen({ navigation }) {
   const [price, setPrice] = useState('');
   const [sizes, setSizes] = useState([]);
   const [selectedImages, setSelectedImages] = useState([]);
+  const [tryOnOverlay, setTryOnOverlay] = useState(null);
   const [categoryModalVisible, setCategoryModalVisible] = useState(false);
 
   const toggleSize = (size) => {
@@ -80,6 +81,23 @@ export default function AddProductScreen({ navigation }) {
   const removeImage = (index) => {
     setSelectedImages((prev) => prev.filter((_, i) => i !== index));
   };
+
+  const pickTryOnOverlay = () => {
+    launchImageLibrary(
+      { mediaType: 'photo', includeBase64: false, selectionLimit: 1 },
+      (res) => {
+        if (res.didCancel || !res.assets?.length) return;
+        const a = res.assets[0];
+        setTryOnOverlay({
+          uri: a.uri,
+          name: a.fileName || `tryon_${Date.now()}.png`,
+          type: a.type || 'image/png',
+        });
+      }
+    );
+  };
+
+  const clearTryOnOverlay = () => setTryOnOverlay(null);
 
   const handleSubmit = async () => {
     const t = title.trim();
@@ -129,6 +147,13 @@ export default function AddProductScreen({ navigation }) {
         type: img.type || 'image/jpeg',
       });
     });
+    if (tryOnOverlay) {
+      formData.append('tryOnOverlay', {
+        uri: tryOnOverlay.uri,
+        name: tryOnOverlay.name || 'tryon.png',
+        type: tryOnOverlay.type || 'image/png',
+      });
+    }
 
     try {
       await dispatch(createProductAsync(formData)).unwrap();
@@ -183,6 +208,27 @@ export default function AddProductScreen({ navigation }) {
                 <Ionicons name="add" size={32} color={theme.muted} />
               </TouchableOpacity>
             ) : null}
+          </View>
+
+          <Text style={[styles.label, { color: theme.text, marginTop: 16 }]}>
+            Try-on overlay (optional PNG with transparency)
+          </Text>
+          <View style={styles.tryOnRow}>
+            {tryOnOverlay ? (
+              <View style={[styles.thumbWrap, { borderColor: theme.border }]}>
+                <Image source={{ uri: tryOnOverlay.uri }} style={styles.thumb} />
+                <TouchableOpacity style={styles.removeThumb} onPress={clearTryOnOverlay}>
+                  <Ionicons name="close-circle" size={24} color="#c62828" />
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <TouchableOpacity
+                onPress={pickTryOnOverlay}
+                style={[styles.addThumb, { backgroundColor: theme.backgroundSecondary, borderColor: theme.border }]}
+              >
+                <Ionicons name="shirt-outline" size={28} color={theme.muted} />
+              </TouchableOpacity>
+            )}
           </View>
 
           <Text style={[styles.label, { color: theme.text }]}>Title</Text>
@@ -361,6 +407,7 @@ const styles = StyleSheet.create({
   sizeChipText: { fontSize: 16, fontWeight: '600' },
   textArea: { minHeight: 80, textAlignVertical: 'top' },
   imageRow: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: 16, gap: 10 },
+  tryOnRow: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: 16, gap: 10 },
   thumbWrap: { width: 80, height: 80, borderRadius: 8, borderWidth: 1, overflow: 'hidden' },
   thumb: { width: '100%', height: '100%' },
   removeThumb: { position: 'absolute', top: 2, right: 2 },

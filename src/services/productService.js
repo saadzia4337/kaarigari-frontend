@@ -32,11 +32,15 @@ export function normalizeProduct(apiProduct, baseUrl) {
     'Seller';
   const sellerAvatar = seller.profilePic ? imageUrl(seller.profilePic, base) : null;
   const images = (apiProduct.images || []).map((p) => imageUrl(p, base));
+  const tryOnOverlay = apiProduct.tryOnOverlay
+    ? imageUrl(apiProduct.tryOnOverlay, base)
+    : null;
   return {
     _id: apiProduct._id,
     id: apiProduct._id,
     image: images[0] || null,
     images,
+    tryOnOverlay,
     title: apiProduct.title || '',
     description: apiProduct.description || '',
     quantity: apiProduct.quantity ?? 0,
@@ -54,13 +58,17 @@ export function normalizeProduct(apiProduct, baseUrl) {
 }
 
 /**
- * GET /api/products or /api/products?sellerId=... or /api/products?bestSeller=true
+ * GET /api/products with optional filters: sellerId, bestSeller, category, excludeId, limit
  * @returns {Promise<Array>} normalized products
  */
-export async function getProducts(sellerId, bestSeller) {
+export async function getProducts(options = {}) {
+  const { sellerId, bestSeller, category, excludeId, limit } = options;
   const params = new URLSearchParams();
   if (sellerId) params.append('sellerId', sellerId);
   if (bestSeller) params.append('bestSeller', 'true');
+  if (category) params.append('category', category);
+  if (excludeId) params.append('excludeId', excludeId);
+  if (limit) params.append('limit', limit.toString());
   
   const url = params.toString()
     ? `${API_BASE_URL}/api/products?${params.toString()}`
@@ -147,15 +155,21 @@ export async function createProduct(token, formData) {
 export async function updateProduct(productId, productData, token) {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 30000);
-  
+
+  const isFormData =
+    typeof FormData !== 'undefined' && productData instanceof FormData;
+  const headers = {
+    Accept: 'application/json',
+    Authorization: `Bearer ${token}`,
+  };
+  if (!isFormData) {
+    headers['Content-Type'] = 'application/json';
+  }
+
   const response = await fetch(`${API_BASE_URL}/api/products/${productId}`, {
     method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(productData),
+    headers,
+    body: isFormData ? productData : JSON.stringify(productData),
     signal: controller.signal,
   });
   

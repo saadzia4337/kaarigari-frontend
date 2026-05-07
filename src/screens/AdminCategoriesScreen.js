@@ -24,6 +24,7 @@ import {
   selectCategories,
   fetchCategories,
   createCategoryAsync,
+  updateCategoryAsync,
   deleteCategoryAsync,
 } from '../store/slices/categoriesSlice';
 import { imageUrl } from '../services/productService';
@@ -34,25 +35,41 @@ export default function AdminCategoriesScreen({ navigation }) {
   const dispatch = useDispatch();
   const categories = useSelector(selectCategories);
   const [modalVisible, setModalVisible] = useState(false);
+  const [editingCategory, setEditingCategory] = useState(null);
   const [title, setTitle] = useState('');
   const [imageUri, setImageUri] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
+    console.log('AdminCategoriesScreen: Fetching categories...');
     dispatch(fetchCategories());
   }, [dispatch]);
 
   const pickImage = () => {
+    console.log('pickImage called');
     launchImageLibrary({ mediaType: 'photo' }, (res) => {
+      console.log('Image picker response:', res);
       if (res.didCancel || !res.assets?.[0]?.uri) return;
       setImageUri(res.assets[0].uri);
+      console.log('Image URI set:', res.assets[0].uri);
     });
   };
 
   const resetForm = () => {
+    console.log('resetForm called');
     setTitle('');
     setImageUri(null);
+    setEditingCategory(null);
     setModalVisible(false);
+  };
+
+  const handleEdit = (item) => {
+    console.log('handleEdit called with item:', item);
+    setEditingCategory(item);
+    setTitle(item.title || '');
+    setImageUri(item.image ? imageUrl(item.image) : null);
+    setModalVisible(true);
+    console.log('Edit modal opened for category:', item.title);
   };
 
   const handleAdd = async () => {
@@ -61,49 +78,70 @@ export default function AdminCategoriesScreen({ navigation }) {
       Alert.alert('Required', 'Title is required.');
       return;
     }
+    console.log('handleAdd called - editingCategory:', editingCategory, 'title:', t);
     setSubmitting(true);
     try {
       const formData = new FormData();
       formData.append('title', t);
-      if (imageUri) {
+      if (imageUri && !imageUri.startsWith('http')) {
         formData.append('image', {
           uri: imageUri,
           type: 'image/jpeg',
           name: 'category.jpg',
         });
       }
-      await dispatch(createCategoryAsync(formData)).unwrap();
+      
+      if (editingCategory) {
+        console.log('Updating category:', editingCategory._id);
+        await dispatch(updateCategoryAsync({ id: editingCategory._id, formData })).unwrap();
+        console.log('Category updated successfully');
+      } else {
+        console.log('Creating new category');
+        await dispatch(createCategoryAsync(formData)).unwrap();
+        console.log('Category created successfully');
+      }
       resetForm();
     } catch (e) {
-      Alert.alert('Error', e.message || 'Failed to add category');
+      console.error('Error in handleAdd:', e);
+      Alert.alert('Error', e.message || 'Failed to save category');
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleDelete = (item) => {
+    console.log('handleDelete called with item:', item);
     Alert.alert('Delete', `Delete "${item.title}"?`, [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Delete',
         style: 'destructive',
-        onPress: () => dispatch(deleteCategoryAsync(item._id)),
+        onPress: () => {
+          console.log('Deleting category:', item._id);
+          dispatch(deleteCategoryAsync(item._id));
+        },
       },
     ]);
   };
 
-  const renderItem = ({ item }) => (
-    <View style={[styles.row, { borderColor: theme.border }]}>
-      <Image
-        source={{ uri: imageUrl(item.image) || item.image || 'https://via.placeholder.com/60' }}
-        style={styles.thumb}
-      />
-      <Text style={[styles.rowTitle, { color: theme.text }]} numberOfLines={1}>{item.title}</Text>
-      <TouchableOpacity onPress={() => handleDelete(item)} style={styles.deleteBtn}>
-        <Ionicons name="trash-outline" size={22} color="#c62828" />
-      </TouchableOpacity>
-    </View>
-  );
+  const renderItem = ({ item }) => {
+    console.log('Rendering category item:', item);
+    return (
+      <View style={[styles.row, { borderColor: theme.border }]}>
+        <Image
+          source={{ uri: imageUrl(item.image) || item.image || 'https://via.placeholder.com/60' }}
+          style={styles.thumb}
+        />
+        <Text style={[styles.rowTitle, { color: theme.text }]} numberOfLines={1}>{item.title}</Text>
+        <TouchableOpacity onPress={() => handleEdit(item)} style={styles.editBtn}>
+          <Ionicons name="create-outline" size={22} color="#1976d2" />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => handleDelete(item)} style={styles.deleteBtn}>
+          <Ionicons name="trash-outline" size={22} color="#c62828" />
+        </TouchableOpacity>
+      </View>
+    );
+  };
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
@@ -132,7 +170,9 @@ export default function AdminCategoriesScreen({ navigation }) {
       <Modal visible={modalVisible} transparent animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={[styles.modalContent, { backgroundColor: theme.background }]}>
-            <Text style={[styles.modalTitle, { color: theme.text }]}>Add Category</Text>
+            <Text style={[styles.modalTitle, { color: theme.text }]}>
+              {editingCategory ? 'Edit Category' : 'Add Category'}
+            </Text>
             <TouchableOpacity
               style={[styles.imageBox, { backgroundColor: theme.backgroundSecondary }]}
               onPress={pickImage}
@@ -159,7 +199,7 @@ export default function AdminCategoriesScreen({ navigation }) {
                 onPress={handleAdd}
                 disabled={submitting}
               >
-                {submitting ? <ActivityIndicator color="#fff" size="small" /> : <Text style={styles.modalBtnTextWhite}>Add</Text>}
+                {submitting ? <ActivityIndicator color="#fff" size="small" /> : <Text style={styles.modalBtnTextWhite}>{editingCategory ? 'Update' : 'Add'}</Text>}
               </TouchableOpacity>
             </View>
           </View>
@@ -178,6 +218,7 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1 },
   thumb: { width: 56, height: 56, borderRadius: 8, marginRight: 12 },
   rowTitle: { flex: 1, fontSize: 16 },
+  editBtn: { padding: 8, marginRight: 4 },
   deleteBtn: { padding: 8 },
   empty: { paddingVertical: 24, textAlign: 'center' },
   fab: { position: 'absolute', bottom: 24, right: 24, width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center' },

@@ -125,4 +125,7 @@ dependencies {
     } else {
         implementation jscFlavor
     }
+
+    // ML Kit Pose — frame processor plugin (Try on)
+    implementation("com.google.mlkit:pose-detection:18.0.0-beta4")
 }

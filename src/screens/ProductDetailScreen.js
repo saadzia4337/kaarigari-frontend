@@ -17,6 +17,7 @@ import {
   Alert,
   Modal,
   TextInput,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -34,6 +35,7 @@ import {
 } from '../store/slices/sizeChartsSlice';
 import StarRating from '../components/StarRating';
 import ReviewsSection from '../components/ReviewsSection';
+import SuggestedProductsSlider from '../components/SuggestedProductsSlider';
 import { selectReviewStats } from '../store/slices/reviewsSlice';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -69,8 +71,10 @@ export default function ProductDetailScreen({ navigation, route }) {
     seller,
     category: productCategory,
     sizes: productSizes = [],
+    tryOnOverlay,
   } = product;
   const displayImage = image || (images && images[0]);
+  const tryOnOverlayUri = tryOnOverlay || displayImage;
   const imageList = (images && images.length > 0) ? images : (displayImage ? [displayImage] : []);
   const [sliderIndex, setSliderIndex] = useState(0);
   const [selectedSize, setSelectedSize] = useState(null);
@@ -152,6 +156,10 @@ export default function ProductDetailScreen({ navigation, route }) {
   const messageSeller = () => {
     const sellerParam = { id: sellerId, name: sellerName, image: sellerAvatar };
     navigation.navigate('Messages', { seller: sellerParam });
+  };
+
+  const handleSuggestedProductPress = (suggestedProduct) => {
+    navigation.push('ProductDetail', { productId: suggestedProduct._id });
   };
 
   const openCustomSizeModal = () => {
@@ -351,6 +359,20 @@ export default function ProductDetailScreen({ navigation, route }) {
             </View>
           ) : null}
 
+          {Platform.OS === 'android' && tryOnOverlayUri ? (
+            <TouchableOpacity
+              style={[styles.tryOnBtn, { borderColor: primary }]}
+              onPress={() =>
+                navigation.navigate('TryOn', {
+                  overlayUri: tryOnOverlayUri,
+                  productTitle: title || 'Try on',
+                })
+              }
+            >
+              <Ionicons name="shirt-outline" size={22} color={primary} />
+              <Text style={[styles.tryOnBtnText, { color: primary }]}>Try on (AR)</Text>
+            </TouchableOpacity>
+          ) : null}
           {!isOwnProduct && (
             <TouchableOpacity style={[styles.primaryBtn, { backgroundColor: primary }]} onPress={handleAddToCart}>
               <Ionicons name="cart-outline" size={22} color="#fff" />
@@ -369,6 +391,12 @@ export default function ProductDetailScreen({ navigation, route }) {
               {isInWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'}
             </Text>
           </TouchableOpacity>
+          
+          <SuggestedProductsSlider 
+            category={productCategory}
+            excludeId={currentProductId}
+            onProductPress={handleSuggestedProductPress}
+          />
           
           {currentProductId && (
             <ReviewsSection productId={currentProductId} />
@@ -571,6 +599,17 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   primaryBtnText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  tryOnBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 52,
+    borderRadius: 12,
+    borderWidth: 2,
+    gap: 10,
+    marginBottom: 12,
+  },
+  tryOnBtnText: { fontSize: 16, fontWeight: '600' },
   secondaryBtn: {
     flexDirection: 'row',
     alignItems: 'center',
