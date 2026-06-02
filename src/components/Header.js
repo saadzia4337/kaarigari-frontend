@@ -33,7 +33,7 @@ export default function Header({ navigation }) {
 
   const Badge = ({ count }) => {
     return count > 0 ? (
-      <View style={[styles.badge, { backgroundColor: '#D4AF37' }]}>
+      <View style={[styles.badge, { backgroundColor: theme.yellow }]}>
         <Text style={styles.badgeText}>{count > 99 ? '99+' : count}</Text>
       </View>
     ) : null;

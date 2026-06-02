@@ -199,7 +199,7 @@ export default function AIChatScreen() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: '#fff' }]} edges={['top']}>
       <View style={[styles.header, { backgroundColor: theme.primary?.trim?.() || theme.primary, borderBottomColor: theme.border }]}>
-        <View style={[styles.botBadge, { backgroundColor: '#D4AF37' }]}>
+        <View style={[styles.botBadge, { backgroundColor: theme.yellow }]}>
           <Ionicons name="sparkles" size={20} color="#000" />
         </View>
         <Text style={[styles.headerTitle, { color: '#fff' }]}>AI Assistant</Text>

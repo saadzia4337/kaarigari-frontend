@@ -29,7 +29,7 @@ const TabBadge = ({ count, theme, focused }) => {
       position: 'absolute',
       top: -6,
       right: -6,
-      backgroundColor: focused ? '#fff' : '#D4AF37',
+      backgroundColor: focused ? '#fff' : theme.yellow,
       borderRadius: 10,
       minWidth: 20,
       height: 20,
@@ -92,7 +92,7 @@ export default function TabNavigator() {
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#D4AF37', // Yellow for active tabs
+        tabBarActiveTintColor: theme.yellow, // Dynamic yellow for active tabs
         tabBarInactiveTintColor: '#fff',
         tabBarStyle: {
           backgroundColor: theme.primary?.trim?.() || theme.primary,

@@ -18,6 +18,7 @@ export const lightColors = {
   overlayDark: 'rgba(0, 0, 0, 0.35)',
   white: '#ffffff',
   muted: '#9e9e9e',
+  yellow: '#D4AF37',
 };
 
 export const darkColors = {
@@ -32,4 +33,5 @@ export const darkColors = {
   overlayDark: 'rgba(0, 0, 0, 0.6)',
   white: '#ffffff',
   muted: '#757575',
+  yellow: '#D4AF37',
 };

@@ -6,7 +6,7 @@
  * - Your PC's IP = use when on physical device (or if emulator can't reach 10.0.2.2).
  *   Phone and PC must be on the same WiFi. Run "ipconfig" to get IPv4.
  */
-export const API_HOST_OVERRIDE = 'kaarigari-backend-production.up.railway.app';
+export const API_HOST_OVERRIDE = 'kaarigari-backend-production-7947.up.railway.app';
 // export const API_HOST_OVERRIDE = null
 
 /**
